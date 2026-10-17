@@ -37,10 +37,14 @@ class PipelineState:
 
     def detect_workers(self, frame):
         boxes = []
-        results = self.model(frame, classes=[0], conf=0.3, verbose=False)
+        # Detect all objects using YOLOv8
+        results = self.model(frame, conf=0.25, verbose=False)
         for box in results[0].boxes:
             xyxy = box.xyxy[0].cpu().numpy()
-            boxes.append((int(xyxy[0]), int(xyxy[1]), int(xyxy[2]), int(xyxy[3]), "person", float(box.conf[0].cpu().numpy())))
+            cls_id = int(box.cls[0].cpu().numpy())
+            cls_name = self.model.names[cls_id]
+            conf = float(box.conf[0].cpu().numpy())
+            boxes.append((int(xyxy[0]), int(xyxy[1]), int(xyxy[2]), int(xyxy[3]), cls_name, conf))
 
         if len(boxes) == 0 and self.source_type == "video":
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -48,8 +52,9 @@ class PipelineState:
             contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             for cnt in contours:
                 x, y, w, h = cv2.boundingRect(cnt)
-                if 40 <= w <= 100 and 90 <= h <= 180 and y > 200:
-                    boxes.append((x, y, x + w, y + h, "worker_synthetic", 0.95))
+                if 30 <= w <= 400 and 30 <= h <= 400 and y > 150:
+                    label = "worker_synthetic" if h > 90 and w < 100 else "foreign_object"
+                    boxes.append((x, y, x + w, y + h, label, 0.95))
         return boxes
 
 state = PipelineState()

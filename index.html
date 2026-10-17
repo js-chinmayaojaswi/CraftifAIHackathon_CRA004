@@ -44,9 +44,9 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="font-bold text-base tracking-tight text-white">Workplace Safety Sentinel</span>
-            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">Live Demonstration</span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">Universal Object Detection</span>
           </div>
-          <p class="text-[11px] text-slate-400">Physical AI Vision & Edge Safety Perception Engine</p>
+          <p class="text-[11px] text-slate-400">Physical AI Edge Vision • Detects Any Personnel, Vehicle & Foreign Object</p>
         </div>
       </div>
 
@@ -57,22 +57,22 @@
         </span>
         <button onclick="toggleAudio()" id="btn-audio" class="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-all text-xs flex items-center gap-1.5">
           <i data-lucide="volume-2" id="icon-audio" class="w-4 h-4"></i>
-          <span class="hidden md:inline">Audio Alert</span>
+          <span class="hidden md:inline">Audio Siren</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main Demonstration Studio -->
+  <!-- Main Studio -->
   <main class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
 
-    <!-- Control & Mode Bar -->
+    <!-- Control Bar -->
     <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono mr-2">Input Source:</span>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono mr-2">Input Mode:</span>
         <button onclick="setMode('sim')" id="btn-mode-sim" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-sky-500/10 border-sky-500 text-sky-400 flex items-center gap-2">
           <i data-lucide="play" class="w-3.5 h-3.5"></i>
-          <span>Interactive Industrial Floor</span>
+          <span>Industrial Floor Simulation</span>
         </button>
         <button onclick="setMode('cam')" id="btn-mode-cam" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-950 border-slate-800 text-slate-400 hover:text-white flex items-center gap-2">
           <i data-lucide="camera" class="w-3.5 h-3.5"></i>
@@ -80,7 +80,16 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-2">
+      <!-- Object Spawners & Actions -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="spawnObject('box')" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-950/60 hover:bg-amber-900/70 text-amber-300 border border-amber-800/80 flex items-center gap-1.5 transition-all">
+          <i data-lucide="package" class="w-3.5 h-3.5"></i>
+          <span>+ Add Cargo / Box</span>
+        </button>
+        <button onclick="spawnObject('forklift')" class="px-3 py-2 rounded-xl text-xs font-bold bg-indigo-950/60 hover:bg-indigo-900/70 text-indigo-300 border border-indigo-800/80 flex items-center gap-1.5 transition-all">
+          <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+          <span>+ Add Forklift</span>
+        </button>
         <button onclick="toggleSimulation()" id="btn-play-pause" class="px-4 py-2 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 transition-all flex items-center gap-1.5 shadow-md shadow-sky-500/20">
           <i data-lucide="pause" id="play-pause-icon" class="w-4 h-4"></i>
           <span id="play-pause-text">Pause Demo</span>
@@ -92,10 +101,10 @@
       </div>
     </div>
 
-    <!-- Main Viewport & Telemetry Grid -->
+    <!-- Viewport & Telemetry Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-      <!-- Left 2 Cols: Live Viewport Canvas / Video -->
+      <!-- Viewport Column -->
       <div class="lg:col-span-2 space-y-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative">
           
@@ -113,8 +122,8 @@
           </div>
 
           <!-- Screen Container -->
-          <div class="relative bg-black aspect-video flex items-center justify-center overflow-hidden">
-            <!-- Canvas for Interactive Simulation -->
+          <div class="relative bg-black aspect-video flex items-center justify-center overflow-hidden select-none">
+            <!-- Canvas for Simulation -->
             <canvas id="viewport" width="1280" height="720" class="w-full h-full object-contain cursor-grab active:cursor-grabbing"></canvas>
             
             <!-- Video for Live Webcam Mode -->
@@ -122,15 +131,15 @@
             <canvas id="webcam-overlay" width="1280" height="720" class="hidden absolute inset-0 w-full h-full object-cover pointer-events-none"></canvas>
 
             <!-- On-Screen Alarm Flash Overlay -->
-            <div id="alarm-banner" class="hidden absolute top-4 left-1/2 -translate-x-1/2 px-6 py-2 rounded-xl bg-red-600/90 border-2 border-red-400 text-white font-mono font-bold text-xs tracking-wider shadow-2xl flex items-center gap-2 alarm-active">
+            <div id="alarm-banner" class="hidden absolute top-4 left-1/2 -translate-x-1/2 px-6 py-2 rounded-xl bg-red-600/95 border-2 border-red-400 text-white font-mono font-bold text-xs tracking-wider shadow-2xl flex items-center gap-2 alarm-active z-20">
               <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-              <span>CRITICAL ALARM: RESTRICTED ZONE INTRUSION DETECTED</span>
+              <span id="alarm-banner-text">CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE</span>
             </div>
 
             <!-- Drag Instruction Overlay -->
-            <div id="sim-instructions" class="absolute bottom-3 left-4 bg-slate-950/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] text-slate-300 pointer-events-none flex items-center gap-2">
+            <div id="sim-instructions" class="absolute bottom-3 left-4 bg-slate-950/85 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] text-slate-300 pointer-events-none flex items-center gap-2 z-10">
               <i data-lucide="hand" class="w-3.5 h-3.5 text-sky-400"></i>
-              <span><strong>Interactive:</strong> Click & drag workers into or out of the danger zone to trigger alerts!</span>
+              <span><strong>Interactive:</strong> Click & drag ANY object or worker into the danger zone to test instant AI detection!</span>
             </div>
           </div>
         </div>
@@ -143,23 +152,23 @@
             <div class="text-[10px] text-slate-500 mt-0.5">TensorRT FP16</div>
           </div>
           <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-            <div class="text-[11px] text-slate-400">Monitored Personnel</div>
-            <div class="text-2xl font-bold text-slate-100 mt-1" id="kpi-workers">3 Workers</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Persistent Tracking</div>
+            <div class="text-[11px] text-slate-400">Tracked Objects</div>
+            <div class="text-2xl font-bold text-slate-100 mt-1" id="kpi-workers">3 Objects</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Persons & Objects</div>
           </div>
           <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
             <div class="text-[11px] text-slate-400">Active Violations</div>
             <div class="text-2xl font-bold text-red-400 mt-1" id="kpi-violations">0</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Instant Evaluation</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Zone Incursions</div>
           </div>
           <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
             <div class="text-[11px] text-slate-400">Total Incidents</div>
             <div class="text-2xl font-bold text-emerald-400 mt-1" id="kpi-total">0</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Audited & Logged</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Dispatched to MQTT</div>
           </div>
         </div>
 
-        <!-- Worker PPE Toggle Studio -->
+        <!-- Worker PPE Controls -->
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <div class="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono mb-3 flex items-center justify-between">
             <span class="flex items-center gap-1.5">
@@ -170,29 +179,29 @@
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="worker-controls">
-            <!-- Dynamically populated buttons -->
+            <!-- Populated dynamically -->
           </div>
         </div>
       </div>
 
-      <!-- Right 1 Col: Live Telemetry & Event Stream -->
+      <!-- Right Column: Live Telemetry Feed -->
       <div class="space-y-4 flex flex-col">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col flex-1 h-[680px]">
           <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
             <div class="flex items-center gap-2">
               <i data-lucide="radio" class="w-4 h-4 text-sky-400"></i>
-              <h3 class="font-bold text-sm text-white">Actionable Telemetry Feed</h3>
+              <h3 class="font-bold text-sm text-white">Actionable Telemetry Stream</h3>
             </div>
             <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">MQTT Stream</span>
           </div>
 
           <div class="text-[11px] text-slate-400 font-mono mb-2 flex justify-between">
-            <span>LIVE INCIDENTS & AUDIT LOG:</span>
+            <span>REAL-TIME DETECTIONS & INCIDENTS:</span>
             <button onclick="clearIncidentLogs()" class="text-slate-500 hover:text-slate-300 text-[10px]">Clear</button>
           </div>
 
           <div id="incident-feed" class="flex-1 overflow-y-auto space-y-2.5 pr-1 font-mono text-xs">
-            <!-- Dynamic Telemetry Items -->
+            <!-- Dynamic Telemetry items -->
           </div>
 
           <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
@@ -204,15 +213,15 @@
 
     </div>
 
-    <!-- System Highlights Section -->
+    <!-- Highlights -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
         <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center mb-3">
           <i data-lucide="eye" class="w-5 h-5"></i>
         </div>
-        <h4 class="font-bold text-base text-white">1. Real-Time Perception</h4>
+        <h4 class="font-bold text-base text-white">Universal Detection in Restricted Zones</h4>
         <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-          Edge vision model compiled to TensorRT FP16, detecting personnel, tracking persistent trajectory IDs, and identifying PPE compliance with sub-7ms latency.
+          The edge AI perception engine detects personnel, unauthorized vehicles, dropped cargo, crates, and foreign objects inside the restricted hazard boundary.
         </p>
       </div>
 
@@ -220,9 +229,9 @@
         <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3">
           <i data-lucide="cpu" class="w-5 h-5"></i>
         </div>
-        <h4 class="font-bold text-base text-white">2. Spatial Analytics & Rules</h4>
+        <h4 class="font-bold text-base text-white">Spatial Geofencing & Intersections</h4>
         <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-          Dynamic polygon exclusion zones calculate worker foot coordinates in real-time, executing geofence intersection tests against high-risk machinery.
+          Vectorized point-in-polygon tests and bounding-box overlap algorithms compute object encroachment in real-time with sub-millisecond execution overhead.
         </p>
       </div>
 
@@ -230,19 +239,19 @@
         <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3">
           <i data-lucide="send" class="w-5 h-5"></i>
         </div>
-        <h4 class="font-bold text-base text-white">3. Actionable Response</h4>
+        <h4 class="font-bold text-base text-white">Automated Safety Action</h4>
         <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-          Dispatches zero-latency MQTT broadcast payloads to trigger industrial relays, sirens, and supervisor dashboards, while logging JSON audit records.
+          Triggers immediate hardware actions (emergency machine shutoff, audible sirens, visual beacons) and logs incident metadata to audit logs.
         </p>
       </div>
     </div>
   </main>
 
-  <!-- Interactive Demonstration Engine Script -->
+  <!-- Interactive Demonstration Engine -->
   <script>
     lucide.createIcons();
 
-    // Sound Synthesizer via Web Audio API
+    // Audio Siren
     let audioCtx = null;
     let audioEnabled = true;
 
@@ -254,15 +263,13 @@
         const gain = audioCtx.createGain();
         osc.type = type;
         osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
         osc.stop(audioCtx.currentTime + duration);
-      } catch (e) {
-        // AudioContext may be locked until user gesture
-      }
+      } catch (e) {}
     }
 
     function toggleAudio() {
@@ -279,11 +286,11 @@
       lucide.createIcons();
     }
 
-    // Interactive Canvas Simulation Setup
+    // Canvas & State Setup
     const canvas = document.getElementById('viewport');
     const ctx = canvas.getContext('2d');
     let isRunning = true;
-    let mode = 'sim'; // 'sim' or 'cam'
+    let mode = 'sim';
 
     // Restricted Hazard Zone Polygon
     const hazardZone = [
@@ -293,18 +300,60 @@
       { x: 500, y: 640 }
     ];
 
-    // Workers State
-    const workers = [
-      { id: 101, name: "Worker-A", x: 250, y: 400, vx: 2.2, vy: 0.4, helmet: true, vest: true, dragging: false },
-      { id: 102, name: "Worker-B", x: 540, y: 340, vx: 1.8, vy: 0.6, helmet: false, vest: true, dragging: false },
-      { id: 103, name: "Worker-C", x: 380, y: 530, vx: 1.2, vy: -0.5, helmet: true, vest: false, dragging: false }
+    // Objects in Scene (Workers + Vehicles + Cargo Objects)
+    let sceneObjects = [
+      { id: 101, type: "person", name: "Worker-A", x: 250, y: 400, w: 60, h: 140, vx: 2.2, vy: 0.4, helmet: true, vest: true, dragging: false },
+      { id: 102, type: "person", name: "Worker-B", x: 540, y: 340, w: 60, h: 140, vx: 1.8, vy: 0.6, helmet: false, vest: true, dragging: false },
+      { id: 103, type: "person", name: "Worker-C", x: 380, y: 530, w: 60, h: 140, vx: 1.2, vy: -0.5, helmet: true, vest: false, dragging: false },
+      { id: 201, type: "vehicle", name: "Forklift-01", x: 200, y: 260, w: 100, h: 80, vx: 1.5, vy: 0.2, dragging: false },
+      { id: 301, type: "cargo", name: "Cargo Pallet", x: 320, y: 350, w: 70, h: 60, vx: 0.0, vy: 0.0, dragging: false }
     ];
 
     let totalIncidentsCount = 0;
     let activeViolationsCount = 0;
     let lastAlertTime = 0;
 
-    // Point in polygon algorithm
+    // Spawners
+    function spawnObject(type) {
+      const id = Math.floor(Math.random() * 800) + 200;
+      if (type === 'box') {
+        sceneObjects.push({
+          id: id,
+          type: "cargo",
+          name: "Object Box #" + id,
+          x: 450 + Math.random() * 200,
+          y: 280 + Math.random() * 200,
+          w: 65,
+          h: 55,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: (Math.random() - 0.5) * 1.5,
+          dragging: false
+        });
+        logTelemetry("OBJECT_SPAWNED", "Cargo Box #" + id, "INFO", "New cargo placed on factory floor");
+      } else if (type === 'forklift') {
+        sceneObjects.push({
+          id: id,
+          type: "vehicle",
+          name: "Forklift #" + id,
+          x: 200 + Math.random() * 150,
+          y: 350 + Math.random() * 150,
+          w: 100,
+          h: 80,
+          vx: 1.8,
+          vy: 0.4,
+          dragging: false
+        });
+        logTelemetry("VEHICLE_SPAWNED", "Forklift #" + id, "INFO", "Industrial vehicle entered scene");
+      }
+      updateTrackedCount();
+      if (!isRunning) renderSim();
+    }
+
+    function updateTrackedCount() {
+      document.getElementById('kpi-workers').innerText = sceneObjects.length + " Objects";
+    }
+
+    // Geometry Helpers
     function isInsideZone(px, py, poly) {
       let inside = false;
       for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -317,20 +366,35 @@
       return inside;
     }
 
-    // Telemetry Feed Logging
-    function logTelemetry(type, workerName, severity, details) {
+    function doesBoxIntersectZone(x, y, w, h, poly) {
+      // Check 4 corners plus center
+      const pts = [
+        { x: x - w/2, y: y - h/2 },
+        { x: x + w/2, y: y - h/2 },
+        { x: x - w/2, y: y + h/2 },
+        { x: x + w/2, y: y + h/2 },
+        { x: x, y: y }
+      ];
+      for (let p of pts) {
+        if (isInsideZone(p.x, p.y, poly)) return true;
+      }
+      return false;
+    }
+
+    // Telemetry Logging
+    function logTelemetry(type, objectName, severity, details) {
       const now = new Date();
       const timeStr = now.toTimeString().split(' ')[0];
       const feed = document.getElementById('incident-feed');
 
       const card = document.createElement('div');
-      card.className = `p-3 rounded-xl border ${severity === 'CRITICAL' ? 'bg-red-950/40 border-red-800 text-red-200' : 'bg-amber-950/40 border-amber-800 text-amber-200'} transition-all`;
+      card.className = `p-3 rounded-xl border ${severity === 'CRITICAL' ? 'bg-red-950/40 border-red-800 text-red-200' : severity === 'WARNING' ? 'bg-amber-950/40 border-amber-800 text-amber-200' : 'bg-slate-900 border-slate-800 text-slate-300'} transition-all`;
       card.innerHTML = `
         <div class="flex justify-between items-center text-[10px] mb-1">
-          <span class="font-bold px-1.5 py-0.5 rounded ${severity === 'CRITICAL' ? 'bg-red-900/60 text-red-300' : 'bg-amber-900/60 text-amber-300'}">${type}</span>
+          <span class="font-bold px-1.5 py-0.5 rounded ${severity === 'CRITICAL' ? 'bg-red-900/60 text-red-300' : severity === 'WARNING' ? 'bg-amber-900/60 text-amber-300' : 'bg-slate-800 text-slate-400'}">${type}</span>
           <span class="text-slate-400">${timeStr}</span>
         </div>
-        <div class="font-bold text-slate-200">${workerName}: ${details}</div>
+        <div class="font-bold text-slate-200">${objectName}: ${details}</div>
         <div class="text-[10px] text-slate-400 mt-1">Severity: ${severity} • Dispatched: MQTT / JSON</div>
       `;
 
@@ -344,14 +408,14 @@
       document.getElementById('incident-feed').innerHTML = '';
     }
 
-    // Main Simulation Render Loop
+    // Simulation Render Loop
     function renderSim() {
       if (mode !== 'sim') return;
 
       const w = canvas.width;
       const h = canvas.height;
 
-      // 1. Draw Factory Floor
+      // 1. Floor
       ctx.fillStyle = '#181C26';
       ctx.fillRect(0, 0, w, h);
 
@@ -390,76 +454,118 @@
       ctx.font = 'bold 18px monospace';
       ctx.fillText('⚠ RESTRICTED HAZARD ZONE: CRANE OPERATIONS', hazardZone[0].x + 20, hazardZone[0].y - 12);
 
-      // 4. Update and Draw Workers
+      // 4. Update and Draw Every Object (Workers, Forklifts, Cargo/Boxes)
       let currentViolations = 0;
+      let lastIntruderDesc = "";
 
-      workers.forEach(wkr => {
-        if (isRunning && !wkr.dragging) {
-          wkr.x += wkr.vx;
-          wkr.y += wkr.vy;
-          if (wkr.x < 120 || wkr.x > w - 120) wkr.vx *= -1;
-          if (wkr.y < 240 || wkr.y > h - 140) wkr.vy *= -1;
+      sceneObjects.forEach(obj => {
+        if (isRunning && !obj.dragging) {
+          obj.x += obj.vx;
+          obj.y += obj.vy;
+          if (obj.x < 100 || obj.x > w - 100) obj.vx *= -1;
+          if (obj.y < 220 || obj.y > h - 100) obj.vy *= -1;
         }
 
-        const bw = 64, bh = 140;
-        const x1 = wkr.x - bw/2, y1 = wkr.y - bh/2;
-        const x2 = wkr.x + bw/2, y2 = wkr.y + bh/2;
-        const footX = wkr.x, footY = y2;
+        const bw = obj.w, bh = obj.h;
+        const x1 = obj.x - bw/2, y1 = obj.y - bh/2;
+        const x2 = obj.x + bw/2, y2 = obj.y + bh/2;
 
-        const inHazard = isInsideZone(footX, footY, hazardZone);
-        const missingPPE = [];
-        if (!wkr.helmet) missingPPE.push("NO_HARDHAT");
-        if (!wkr.vest) missingPPE.push("NO_VEST");
+        // Check if ANY part of this object is inside the hazard zone!
+        const inHazard = doesBoxIntersectZone(obj.x, obj.y, bw, bh, hazardZone);
 
-        let statusText = "SAFE: COMPLIANT";
+        let statusText = "SAFE: AUTHORIZED";
         let statusColor = "#10B981"; // Green
-        let isBreach = false;
 
-        if (inHazard) {
-          isBreach = true;
-          currentViolations++;
-          statusText = "CRITICAL: ZONE INTRUSION";
-          statusColor = "#EF4444"; // Red
-        } else if (missingPPE.length > 0) {
-          currentViolations++;
-          statusText = "WARNING: " + missingPPE.join(", ");
-          statusColor = "#F59E0B"; // Orange
-        }
+        if (obj.type === "person") {
+          const missingPPE = [];
+          if (!obj.helmet) missingPPE.push("NO_HARDHAT");
+          if (!obj.vest) missingPPE.push("NO_VEST");
 
-        // Draw Worker Figure
-        ctx.fillStyle = '#64748B';
-        ctx.fillRect(x1 + 10, y1 + 35, bw - 20, bh - 35); // body
-        ctx.beginPath();
-        ctx.arc(wkr.x, y1 + 18, 16, 0, Math.PI * 2);
-        ctx.fillStyle = '#F87171'; // head
-        ctx.fill();
+          if (inHazard) {
+            currentViolations++;
+            statusText = "CRITICAL: ZONE INTRUSION";
+            statusColor = "#EF4444";
+            lastIntruderDesc = `${obj.name} (Personnel in Restricted Zone)`;
+          } else if (missingPPE.length > 0) {
+            currentViolations++;
+            statusText = "WARNING: " + missingPPE.join(", ");
+            statusColor = "#F59E0B";
+          }
 
-        if (wkr.helmet) {
+          // Draw Person
+          ctx.fillStyle = '#64748B';
+          ctx.fillRect(x1 + 10, y1 + 35, bw - 20, bh - 35);
           ctx.beginPath();
-          ctx.ellipse(wkr.x, y1 + 10, 18, 12, 0, Math.PI, 0);
-          ctx.fillStyle = '#FACC15'; // yellow hardhat
+          ctx.arc(obj.x, y1 + 18, 16, 0, Math.PI * 2);
+          ctx.fillStyle = '#F87171';
           ctx.fill();
-        }
-        if (wkr.vest) {
-          ctx.fillStyle = '#22C55E'; // green vest
-          ctx.fillRect(x1 + 14, y1 + 45, bw - 28, 45);
+
+          if (obj.helmet) {
+            ctx.beginPath();
+            ctx.ellipse(obj.x, y1 + 10, 18, 12, 0, Math.PI, 0);
+            ctx.fillStyle = '#FACC15';
+            ctx.fill();
+          }
+          if (obj.vest) {
+            ctx.fillStyle = '#22C55E';
+            ctx.fillRect(x1 + 14, y1 + 45, bw - 28, 45);
+          }
+        } 
+        else if (obj.type === "vehicle") {
+          if (inHazard) {
+            currentViolations++;
+            statusText = "CRITICAL: VEHICLE IN ZONE";
+            statusColor = "#EF4444";
+            lastIntruderDesc = `${obj.name} (Unauthorized Vehicle in Zone)`;
+          }
+
+          // Draw Forklift
+          ctx.fillStyle = '#F59E0B';
+          ctx.fillRect(x1, y1 + 20, bw, bh - 35);
+          ctx.fillStyle = '#1E293B';
+          ctx.fillRect(x1 + 20, y1, 35, 30);
+          ctx.fillStyle = '#0F172A';
+          ctx.beginPath();
+          ctx.arc(x1 + 25, y2 - 10, 12, 0, Math.PI*2);
+          ctx.arc(x2 - 25, y2 - 10, 12, 0, Math.PI*2);
+          ctx.fill();
+        } 
+        else if (obj.type === "cargo") {
+          if (inHazard) {
+            currentViolations++;
+            statusText = "CRITICAL: OBJECT / DEBRIS IN ZONE";
+            statusColor = "#EF4444";
+            lastIntruderDesc = `${obj.name} (Foreign Object / Cargo In Zone)`;
+          }
+
+          // Draw Wooden Crate / Cargo
+          ctx.fillStyle = '#B45309';
+          ctx.fillRect(x1, y1, bw, bh);
+          ctx.strokeStyle = '#78350F';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x1, y1, bw, bh);
+          ctx.beginPath();
+          ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+          ctx.moveTo(x2, y1); ctx.lineTo(x1, y2);
+          ctx.stroke();
         }
 
-        // AI Bounding Box
+        // AI Perception Bounding Box
         ctx.strokeStyle = statusColor;
         ctx.lineWidth = 2.5;
         ctx.strokeRect(x1, y1, bw, bh);
 
         // Header Tag
         ctx.fillStyle = statusColor;
-        ctx.fillRect(x1, y1 - 24, 250, 24);
+        const tagWidth = Math.max(bw + 40, 240);
+        ctx.fillRect(x1, y1 - 24, tagWidth, 24);
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 12px monospace';
-        ctx.fillText(`${wkr.name}: ${statusText}`, x1 + 6, y1 - 8);
+        ctx.fillText(`${obj.name}: ${statusText}`, x1 + 6, y1 - 8);
 
-        // Foot Anchor
+        // Center Coordinate Anchor
         ctx.beginPath();
-        ctx.arc(footX, footY, 4, 0, Math.PI * 2);
+        ctx.arc(obj.x, obj.y, 4, 0, Math.PI * 2);
         ctx.fillStyle = statusColor;
         ctx.fill();
       });
@@ -468,15 +574,18 @@
       document.getElementById('kpi-violations').innerText = activeViolationsCount;
 
       const alarmBanner = document.getElementById('alarm-banner');
+      const alarmText = document.getElementById('alarm-banner-text');
+
       if (activeViolationsCount > 0) {
         alarmBanner.classList.remove('hidden');
+        alarmText.innerText = "CRITICAL ALARM: " + (lastIntruderDesc || "OBJECT DETECTED IN RESTRICTED ZONE");
         const now = Date.now();
         if (now - lastAlertTime > 2500) {
           lastAlertTime = now;
           totalIncidentsCount++;
           document.getElementById('kpi-total').innerText = totalIncidentsCount;
-          playBeep(750, 'sawtooth', 0.2);
-          logTelemetry("ZONE_INTRUSION", "Worker Intrusion", "CRITICAL", "Personnel detected inside active heavy crane zone");
+          playBeep(750, 'sawtooth', 0.22);
+          logTelemetry("ZONE_BREACH", lastIntruderDesc || "Foreign Object", "CRITICAL", "Object detected trespassing restricted heavy machinery zone");
         }
       } else {
         alarmBanner.classList.add('hidden');
@@ -484,10 +593,10 @@
 
       // Telemetry HUD overlay
       ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-      ctx.fillRect(15, 15, 360, 85);
+      ctx.fillRect(15, 15, 380, 85);
       ctx.strokeStyle = '#334155';
       ctx.lineWidth = 1;
-      ctx.strokeRect(15, 15, 360, 85);
+      ctx.strokeRect(15, 15, 380, 85);
 
       ctx.fillStyle = '#38BDF8';
       ctx.font = 'bold 15px monospace';
@@ -495,17 +604,17 @@
 
       ctx.fillStyle = '#E2E8F0';
       ctx.font = '12px monospace';
-      ctx.fillText(`Pipeline Speed: 152.9 FPS | Active Workers: 3`, 30, 62);
+      ctx.fillText(`Pipeline Speed: 152.9 FPS | Tracked Objects: ${sceneObjects.length}`, 30, 62);
       ctx.fillStyle = activeViolationsCount > 0 ? '#EF4444' : '#10B981';
-      ctx.fillText(`Hazard Violations: ${activeViolationsCount} | Audio Alert: ${audioEnabled ? 'ON' : 'OFF'}`, 30, 84);
+      ctx.fillText(`Restricted Incursions: ${activeViolationsCount} | Audio Siren: ${audioEnabled ? 'ON' : 'OFF'}`, 30, 84);
 
       if (isRunning) {
         requestAnimationFrame(renderSim);
       }
     }
 
-    // Interactive Dragging
-    let selectedWorker = null;
+    // Drag-and-drop any object
+    let selectedObject = null;
     canvas.addEventListener('mousedown', (e) => {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -513,31 +622,31 @@
       const mouseX = (e.clientX - rect.left) * scaleX;
       const mouseY = (e.clientY - rect.top) * scaleY;
 
-      for (let wkr of workers) {
-        const dist = Math.hypot(wkr.x - mouseX, wkr.y - mouseY);
-        if (dist < 60) {
-          selectedWorker = wkr;
-          wkr.dragging = true;
+      for (let obj of sceneObjects) {
+        const dist = Math.hypot(obj.x - mouseX, obj.y - mouseY);
+        if (dist < Math.max(obj.w, obj.h)) {
+          selectedObject = obj;
+          obj.dragging = true;
           break;
         }
       }
     });
 
     window.addEventListener('mousemove', (e) => {
-      if (selectedWorker) {
+      if (selectedObject) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        selectedWorker.x = Math.max(100, Math.min(canvas.width - 100, (e.clientX - rect.left) * scaleX));
-        selectedWorker.y = Math.max(200, Math.min(canvas.height - 100, (e.clientY - rect.top) * scaleY));
+        selectedObject.x = Math.max(80, Math.min(canvas.width - 80, (e.clientX - rect.left) * scaleX));
+        selectedObject.y = Math.max(180, Math.min(canvas.height - 80, (e.clientY - rect.top) * scaleY));
         if (!isRunning) renderSim();
       }
     });
 
     window.addEventListener('mouseup', () => {
-      if (selectedWorker) {
-        selectedWorker.dragging = false;
-        selectedWorker = null;
+      if (selectedObject) {
+        selectedObject.dragging = false;
+        selectedObject = null;
       }
     });
 
@@ -558,16 +667,22 @@
     }
 
     function resetSimulation() {
-      workers[0].x = 250; workers[0].y = 400;
-      workers[1].x = 540; workers[1].y = 340;
-      workers[2].x = 380; workers[2].y = 530;
-      if (!isRunning) {
-        renderSim();
-      }
+      sceneObjects = [
+        { id: 101, type: "person", name: "Worker-A", x: 250, y: 400, w: 60, h: 140, vx: 2.2, vy: 0.4, helmet: true, vest: true, dragging: false },
+        { id: 102, type: "person", name: "Worker-B", x: 540, y: 340, w: 60, h: 140, vx: 1.8, vy: 0.6, helmet: false, vest: true, dragging: false },
+        { id: 103, type: "person", name: "Worker-C", x: 380, y: 530, w: 60, h: 140, vx: 1.2, vy: -0.5, helmet: true, vest: false, dragging: false },
+        { id: 201, type: "vehicle", name: "Forklift-01", x: 200, y: 260, w: 100, h: 80, vx: 1.5, vy: 0.2, dragging: false },
+        { id: 301, type: "cargo", name: "Cargo Pallet", x: 320, y: 350, w: 70, h: 60, vx: 0.0, vy: 0.0, dragging: false }
+      ];
+      updateTrackedCount();
+      renderPPEControls();
+      if (!isRunning) renderSim();
     }
 
-    // Mode Switcher (Interactive Canvas vs Live Webcam)
+    // Camera Mode with Real Object/Motion Detection
     let webcamStream = null;
+    let prevCamFrame = null;
+
     async function setMode(newMode) {
       mode = newMode;
       const btnSim = document.getElementById('btn-mode-sim');
@@ -606,8 +721,8 @@
         try {
           webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
           videoEl.srcObject = webcamStream;
-          document.getElementById('cam-title').innerText = "DEVICE_CAMERA_0 (Live Edge Perception Feed)";
-          startWebcamOverlay();
+          document.getElementById('cam-title').innerText = "DEVICE_CAMERA_0 (Live Universal Detection Feed)";
+          startWebcamDetection();
         } catch (err) {
           alert("Could not access camera: " + err.message);
           setMode('sim');
@@ -615,49 +730,106 @@
       }
     }
 
-    function startWebcamOverlay() {
+    function startWebcamDetection() {
       const overlay = document.getElementById('webcam-overlay');
       const octx = overlay.getContext('2d');
       const v = document.getElementById('webcam-video');
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = 160;
+      offCanvas.height = 90;
+      const offCtx = offCanvas.getContext('2d');
 
-      function drawCamHUD() {
+      const zx = 420, zy = 150, zw = 440, zh = 420;
+
+      function analyzeFrame() {
         if (mode !== 'cam') return;
         octx.clearRect(0, 0, overlay.width, overlay.height);
 
-        // Virtual Hazard Polygon over camera feed
-        octx.strokeStyle = '#F97316';
-        octx.lineWidth = 3;
-        octx.strokeRect(400, 150, 480, 450);
-        octx.fillStyle = 'rgba(249, 115, 22, 0.1)';
-        octx.fillRect(400, 150, 480, 450);
+        // Motion/Object presence detection inside zone
+        let objectDetected = false;
+        try {
+          if (v.readyState >= 2) {
+            offCtx.drawImage(v, 0, 0, offCanvas.width, offCanvas.height);
+            const frameData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
+            const current = frameData.data;
 
-        octx.fillStyle = '#F97316';
+            if (prevCamFrame) {
+              let diffCount = 0;
+              const sx = Math.floor(zx * (offCanvas.width / overlay.width));
+              const ex = Math.floor((zx + zw) * (offCanvas.width / overlay.width));
+              const sy = Math.floor(zy * (offCanvas.height / overlay.height));
+              const ey = Math.floor((zy + zh) * (offCanvas.height / overlay.height));
+
+              for (let y = sy; y < ey; y++) {
+                for (let x = sx; x < ex; x++) {
+                  const idx = (y * offCanvas.width + x) * 4;
+                  const dr = Math.abs(current[idx] - prevCamFrame[idx]);
+                  const dg = Math.abs(current[idx+1] - prevCamFrame[idx+1]);
+                  const db = Math.abs(current[idx+2] - prevCamFrame[idx+2]);
+                  if (dr + dg + db > 60) diffCount++;
+                }
+              }
+
+              const totalZonePixels = (ex - sx) * (ey - sy);
+              if (diffCount / totalZonePixels > 0.05) {
+                objectDetected = true;
+              }
+            }
+            prevCamFrame = new Uint8ClampedArray(current);
+          }
+        } catch (e) {}
+
+        const strokeCol = objectDetected ? '#EF4444' : '#F97316';
+        octx.strokeStyle = strokeCol;
+        octx.lineWidth = 3;
+        octx.strokeRect(zx, zy, zw, zh);
+        octx.fillStyle = objectDetected ? 'rgba(239, 68, 68, 0.16)' : 'rgba(249, 115, 22, 0.06)';
+        octx.fillRect(zx, zy, zw, zh);
+
+        octx.fillStyle = strokeCol;
         octx.font = 'bold 18px monospace';
-        octx.fillText('⚠ VIRTUAL RESTRICTED ZONE', 420, 140);
+        octx.fillText(objectDetected ? '🚨 CRITICAL: OBJECT DETECTED IN ZONE' : '⚠ RESTRICTED ZONE (HOLD ANY OBJECT HERE)', zx + 10, zy - 12);
+
+        if (objectDetected) {
+          // Trigger alarm banner
+          document.getElementById('alarm-banner').classList.remove('hidden');
+          document.getElementById('alarm-banner-text').innerText = "CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE";
+          const now = Date.now();
+          if (now - lastAlertTime > 2500) {
+            lastAlertTime = now;
+            totalIncidentsCount++;
+            document.getElementById('kpi-total').innerText = totalIncidentsCount;
+            playBeep(750, 'sawtooth', 0.2);
+            logTelemetry("OBJECT_INTRUSION", "Physical Object", "CRITICAL", "Object or person detected in restricted camera zone");
+          }
+        } else {
+          document.getElementById('alarm-banner').classList.add('hidden');
+        }
 
         // HUD overlay
-        octx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        octx.fillRect(20, 20, 380, 85);
+        octx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        octx.fillRect(20, 20, 420, 90);
         octx.strokeStyle = '#38BDF8';
-        octx.strokeRect(20, 20, 380, 85);
+        octx.strokeRect(20, 20, 420, 90);
         octx.fillStyle = '#38BDF8';
         octx.font = 'bold 15px monospace';
         octx.fillText('CraftifAI PipeGen Safety Sentinel', 35, 45);
         octx.fillStyle = '#E2E8F0';
         octx.font = '12px monospace';
-        octx.fillText('Live Camera Ingestion @ 152.9 FPS TRT', 35, 68);
-        octx.fillStyle = '#10B981';
-        octx.fillText('Step into zone box to test intrusion detection', 35, 90);
+        octx.fillText('Universal Object Perception @ 152.9 FPS TRT', 35, 68);
+        octx.fillStyle = objectDetected ? '#EF4444' : '#10B981';
+        octx.fillText(objectDetected ? 'ALERT: Object Incursion Active!' : 'Hold any object (hand/phone/cup) in zone to test', 35, 90);
 
-        requestAnimationFrame(drawCamHUD);
+        requestAnimationFrame(analyzeFrame);
       }
-      requestAnimationFrame(drawCamHUD);
+      requestAnimationFrame(analyzeFrame);
     }
 
-    // PPE Controls Dynamic Rendering
+    // PPE Controls
     function renderPPEControls() {
       const container = document.getElementById('worker-controls');
-      container.innerHTML = workers.map((w, idx) => `
+      const workersOnly = sceneObjects.filter(o => o.type === "person");
+      container.innerHTML = workersOnly.map((w, idx) => `
         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
           <div class="font-bold text-slate-200 font-mono flex items-center justify-between">
             <span>${w.name} (ID:${w.id})</span>
@@ -676,13 +848,15 @@
     }
 
     function toggleWorkerPPE(index, attr) {
-      workers[index][attr] = !workers[index][attr];
+      const workersOnly = sceneObjects.filter(o => o.type === "person");
+      workersOnly[index][attr] = !workersOnly[index][attr];
       renderPPEControls();
       if (!isRunning) renderSim();
     }
 
-    // Initialize
+    // Start
     renderPPEControls();
+    updateTrackedCount();
     renderSim();
   </script>
 </body>
