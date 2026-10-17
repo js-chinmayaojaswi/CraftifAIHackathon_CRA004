@@ -10,25 +10,25 @@
     "CPU": {
       "full_name": "Host CPU Baseline (FP32)",
       "provider": "CPUExecutionProvider",
-      "mean_latency_ms": 30.74,
-      "p95_latency_ms": 33.17,
-      "throughput_fps": 32.5,
+      "mean_latency_ms": 31.2,
+      "p95_latency_ms": 36.78,
+      "throughput_fps": 32.0,
       "speedup": "1.0x (Baseline)"
     },
     "CUDA FP32": {
       "full_name": "NVIDIA CUDA Core (FP32 Engine)",
       "provider": "CUDAExecutionProvider",
-      "mean_latency_ms": 13.36,
-      "p95_latency_ms": 15.36,
-      "throughput_fps": 74.9,
+      "mean_latency_ms": 13.57,
+      "p95_latency_ms": 15.61,
+      "throughput_fps": 73.7,
       "speedup": "2.3x"
     },
     "TensorRT FP16": {
       "full_name": "TensorRT Engine (FP16 Tensor Cores)",
       "provider": "TensorrtExecutionProvider",
-      "mean_latency_ms": 6.54,
-      "p95_latency_ms": 7.32,
-      "throughput_fps": 152.9,
+      "mean_latency_ms": 6.64,
+      "p95_latency_ms": 7.44,
+      "throughput_fps": 150.6,
       "speedup": "4.7x"
     }
   }
