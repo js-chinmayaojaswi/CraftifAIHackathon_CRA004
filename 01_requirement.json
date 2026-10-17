@@ -1,0 +1,58 @@
+{
+  "project_name": "Workplace Safety Sentinel (Physical AI Edge Perception)",
+  "track": "Track A — PipeGen (Perception)",
+  "author": "Embedded SF Hackathon Team",
+  "version": "1.0.0",
+  "hardware_target": {
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU (6GB VRAM)",
+    "cuda_version": "13.1 / 12.x",
+    "tensorrt_version": "10.x / ORT-TRT",
+    "architecture": "x86_64"
+  },
+  "requirement_prompt": "Build an edge vision perception pipeline using PipeGen that monitors an industrial work area in real-time. Ingest a video stream or camera feed, detect workers and personnel with YOLOv8, classify PPE compliance (helmets/vests), track worker trajectories with persistent IDs across restricted hazard zones (heavy machinery zones), trigger instant safety violations over MQTT, and log structured incident telemetry to JSON audit logs with sub-15ms TensorRT inference latency.",
+  "inputs": [
+    {
+      "source_type": "VideoFile or USBCamera",
+      "resolution": [1920, 1080],
+      "framerate": 30,
+      "format": "RGB / BGR"
+    }
+  ],
+  "tasks": [
+    "Object Detection (Person, Helmet, Vest)",
+    "Multi-Object Tracking (Persistent Worker IDs)",
+    "Spatial Analytics (Polygon Hazard Zone Geofencing)",
+    "PPE Compliance Association (Bounding Box Containment)",
+    "Telemetry Dispatch (MQTT & JSON Incident Audit Log)"
+  ],
+  "models": [
+    {
+      "name": "yolov8n_safety",
+      "framework": "ONNX / TensorRT",
+      "input_shape": [1, 3, 640, 640],
+      "precision": "FP16"
+    }
+  ],
+  "hazard_zones": [
+    {
+      "zone_id": "ZONE_CRANE_DANGER",
+      "polygon": [[100, 200], [500, 200], [500, 480], [100, 480]],
+      "severity": "CRITICAL",
+      "description": "Restricted heavy equipment operation zone"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "Live Stream / Video File",
+      "format": "MP4 / OSD Rendered"
+    },
+    {
+      "type": "MQTT Broker Stream",
+      "topic": "craftifai/pipegen/workplace_safety/alerts"
+    },
+    {
+      "type": "Incident Log File",
+      "path": "incidents.jsonl"
+    }
+  ]
+}

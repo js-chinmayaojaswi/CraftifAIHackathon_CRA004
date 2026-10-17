@@ -1,0 +1,35 @@
+{
+  "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "architecture": "Ada Lovelace (AD107)",
+  "vram": "6141 MiB",
+  "model": "yolov8n_safety (1x3x640x640)",
+  "precision": "FP16 Tensor Core Optimized",
+  "compiler": "CraftifAI PipeGen TensorRT Engine Compiler v0.5.1",
+  "engine_file": "models/yolov8n_safety_fp16.engine",
+  "benchmark_results": {
+    "CPU": {
+      "full_name": "Host CPU Baseline (FP32)",
+      "provider": "CPUExecutionProvider",
+      "mean_latency_ms": 30.74,
+      "p95_latency_ms": 33.17,
+      "throughput_fps": 32.5,
+      "speedup": "1.0x (Baseline)"
+    },
+    "CUDA FP32": {
+      "full_name": "NVIDIA CUDA Core (FP32 Engine)",
+      "provider": "CUDAExecutionProvider",
+      "mean_latency_ms": 13.36,
+      "p95_latency_ms": 15.36,
+      "throughput_fps": 74.9,
+      "speedup": "2.3x"
+    },
+    "TensorRT FP16": {
+      "full_name": "TensorRT Engine (FP16 Tensor Cores)",
+      "provider": "TensorrtExecutionProvider",
+      "mean_latency_ms": 6.54,
+      "p95_latency_ms": 7.32,
+      "throughput_fps": 152.9,
+      "speedup": "4.7x"
+    }
+  }
+}

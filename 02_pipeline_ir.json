@@ -1,0 +1,117 @@
+{
+  "pipeline_name": "Workplace_Safety_Sentinel_Pipeline_IR",
+  "version": "v0.5.1",
+  "framework": "DeepStream-TensorRT",
+  "nodes": [
+    {
+      "id": "node_01_source",
+      "type": "SourceNode",
+      "plugin": "nvv4l2decoder / filesrc",
+      "properties": {
+        "uri": "data/workplace_sample.mp4",
+        "drop_frame_interval": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "outputs": ["stream_raw_frames"]
+    },
+    {
+      "id": "node_02_preprocessor",
+      "type": "PreprocessorNode",
+      "plugin": "nvstreammux / nvvideoconvert",
+      "properties": {
+        "batch_size": 1,
+        "network_width": 640,
+        "network_height": 640,
+        "color_format": "RGB",
+        "scaling_pool": "NVMM_GPU"
+      },
+      "inputs": ["stream_raw_frames"],
+      "outputs": ["stream_tensor_input"]
+    },
+    {
+      "id": "node_03_inference",
+      "type": "InferenceNode",
+      "plugin": "nvinfer / TensorRT_Engine",
+      "properties": {
+        "model_file": "models/yolov8n_safety.onnx",
+        "engine_file": "models/yolov8n_safety_fp16.engine",
+        "precision": "FP16",
+        "gpu_id": 0,
+        "classes": ["person", "hardhat", "safety_vest", "machinery"],
+        "confidence_threshold": 0.45
+      },
+      "inputs": ["stream_tensor_input"],
+      "outputs": ["stream_detections"]
+    },
+    {
+      "id": "node_04_tracker",
+      "type": "TrackerNode",
+      "plugin": "nvtracker (NvDCF / ByteTrack)",
+      "properties": {
+        "tracker_width": 640,
+        "tracker_height": 384,
+        "max_targets": 30,
+        "min_confidence": 0.4
+      },
+      "inputs": ["stream_detections"],
+      "outputs": ["stream_tracked_workers"]
+    },
+    {
+      "id": "node_05_analytics",
+      "type": "AnalyticsNode",
+      "plugin": "nvdsanalytics / CustomRuleEngine",
+      "properties": {
+        "roi_hazard_zones": [
+          {
+            "id": "ZONE_DANGER_HEAVY_LOAD",
+            "polygon": [[100, 200], [500, 200], [500, 480], [100, 480]]
+          }
+        ],
+        "ppe_enforcement": {
+          "require_hardhat": true,
+          "require_vest": true
+        }
+      },
+      "inputs": ["stream_tracked_workers"],
+      "outputs": ["stream_safety_events"]
+    },
+    {
+      "id": "node_06_osd_sink",
+      "type": "SinkNode_Display",
+      "plugin": "nvdsosd / nveglglessink",
+      "properties": {
+        "show_boxes": true,
+        "show_zones": true,
+        "show_alerts": true,
+        "alert_color": "#FF0000"
+      },
+      "inputs": ["stream_safety_events"],
+      "outputs": ["display_monitor"]
+    },
+    {
+      "id": "node_07_mqtt_sink",
+      "type": "SinkNode_MQTT",
+      "plugin": "nvmsgbroker / paho_mqtt",
+      "properties": {
+        "broker_host": "localhost / broker.hivemq.com",
+        "port": 1883,
+        "topic": "craftifai/pipegen/workplace_safety/alerts"
+      },
+      "inputs": ["stream_safety_events"],
+      "outputs": ["mqtt_network_stream"]
+    },
+    {
+      "id": "node_08_json_sink",
+      "type": "SinkNode_JSONAudit",
+      "plugin": "file_sink / jsonlines",
+      "properties": {
+        "filepath": "incident_log.jsonl",
+        "format": "JSONL",
+        "include_metadata": true
+      },
+      "inputs": ["stream_safety_events"],
+      "outputs": ["disk_audit_trail"]
+    }
+  ]
+}
