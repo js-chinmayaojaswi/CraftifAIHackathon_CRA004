@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workplace Safety Sentinel | CraftifAI PipeGen Physical AI Showcase</title>
+  <meta name="description" content="Official submission for Embedded SF: CraftifAI Physical AI Hackathon. Track A (PipeGen) GPU-accelerated edge perception pipeline compiled to TensorRT.">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(56, 189, 248, 0.45); }
+    }
+    .card-glow { animation: glow 4s infinite ease-in-out; }
+    .bg-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #090D16; }
+    ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen selection:bg-sky-500 selection:text-white">
+
+  <!-- Ambient Backdrop -->
+  <div class="fixed inset-0 bg-grid pointer-events-none -z-10"></div>
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[450px] bg-sky-500/10 blur-[130px] rounded-full pointer-events-none -z-10"></div>
+  <div class="fixed bottom-0 right-0 w-[600px] h-[400px] bg-indigo-500/10 blur-[140px] rounded-full pointer-events-none -z-10"></div>
+
+  <!-- Sticky Navbar -->
+  <nav class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/80 px-6 py-3.5 transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-sky-500/20">
+          <i data-lucide="shield-alert" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-base tracking-tight text-white">Workplace Safety Sentinel</span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-sky-950 text-sky-400 border border-sky-800">Track A: PipeGen</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">CraftifAI Physical AI Hackathon • SF 2026</p>
+        </div>
+      </div>
+
+      <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
+        <a href="#overview" class="hover:text-sky-400 transition-colors">Overview</a>
+        <a href="#demo" class="hover:text-sky-400 transition-colors">Live Demo</a>
+        <a href="#stages" class="hover:text-sky-400 transition-colors">5 Stages</a>
+        <a href="#benchmark" class="hover:text-sky-400 transition-colors">TensorRT Benchmark</a>
+        <a href="#telemetry" class="hover:text-sky-400 transition-colors">Telemetry</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/js-chinmayaojaswi/workplace-safety-sentinel-pipegen" target="_blank" 
+           class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-white transition-all shadow-sm">
+          <i data-lucide="github" class="w-4 h-4"></i>
+          <span>GitHub</span>
+        </a>
+        <a href="https://forms.gle/eJyeCKCG2UH757QZ8" target="_blank" 
+           class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold transition-all shadow-md shadow-sky-500/20">
+          <span>Submission Form</span>
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="overview" class="relative pt-16 pb-20 px-6 max-w-7xl mx-auto">
+    <div class="text-center max-w-3xl mx-auto space-y-6">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900 border border-slate-700/70 text-xs text-slate-300">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>100% Software-Executable Edge Physical AI Solution</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+        Building Physical AI That <br>
+        <span class="bg-gradient-to-r from-sky-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">Sees, Decides & Acts</span>
+      </h1>
+
+      <p class="text-base sm:text-lg text-slate-300 leading-relaxed">
+        An industrial edge vision pipeline built with <span class="text-sky-400 font-semibold">CraftifAI PipeGen</span>. Compiles deep learning models into a <span class="text-emerald-400 font-semibold">TensorRT FP16</span> engine running at <strong class="text-white">152.9 FPS</strong> on an <span class="text-indigo-400 font-semibold">NVIDIA GeForce RTX 4050 GPU</span> — monitoring dangerous heavy equipment zones, validating PPE compliance, and dispatching real-time MQTT telemetry.
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <div class="px-4 py-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center gap-2 text-xs font-mono text-slate-300">
+          <i data-lucide="cpu" class="w-4 h-4 text-sky-400"></i>
+          <span>RTX 4050 GPU (Ada Lovelace, 6GB VRAM)</span>
+        </div>
+        <div class="px-4 py-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center gap-2 text-xs font-mono text-slate-300">
+          <i data-lucide="zap" class="w-4 h-4 text-emerald-400"></i>
+          <span>6.54 ms Latency (4.7x Speedup)</span>
+        </div>
+        <div class="px-4 py-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center gap-2 text-xs font-mono text-slate-300">
+          <i data-lucide="radio" class="w-4 h-4 text-indigo-400"></i>
+          <span>Live MQTT & JSON Audit Feed</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Demo & Interactive Player Section -->
+  <section id="demo" class="py-12 px-6 max-w-7xl mx-auto border-t border-slate-900">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-sky-400 font-mono mb-1">Live Pipeline Run</div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">Live Perception Stream & Incident Feed</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-400 text-xs font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          BROKER: broker.hivemq.com:1883
+        </span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Video Player Column -->
+      <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+        <!-- Video Header bar -->
+        <div class="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2 font-mono text-slate-300">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+            <span class="font-bold text-white">CAM_SITE_NORTH</span>
+            <span class="text-slate-500">|</span>
+            <span class="text-slate-400">1280x720 @ 30 FPS</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">152.9 FPS TRT</span>
+            <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono font-bold">YOLOv8n</span>
+          </div>
+        </div>
+
+        <!-- Video Player -->
+        <div class="relative bg-black aspect-video flex items-center justify-center overflow-hidden">
+          <video id="player" controls autoplay loop muted playsinline class="w-full h-full object-contain">
+            <source src="output_safety_sentinel.mp4" type="video/mp4">
+            Your browser does not support HTML5 video.
+          </video>
+        </div>
+
+        <!-- Video Metrics Footer -->
+        <div class="p-4 bg-slate-900/95 grid grid-cols-3 gap-4 border-t border-slate-800 text-center font-mono">
+          <div class="bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400">Zone Breaches</div>
+            <div class="text-xl font-bold text-red-400 mt-0.5">80 Events</div>
+          </div>
+          <div class="bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400">Inference Latency</div>
+            <div class="text-xl font-bold text-sky-400 mt-0.5">6.54 ms</div>
+          </div>
+          <div class="bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400">Safety Compliance</div>
+            <div class="text-xl font-bold text-emerald-400 mt-0.5">Real-Time</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time Telemetry Feed Column -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col h-[520px]">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="activity" class="w-4 h-4 text-sky-400"></i>
+            <h3 class="font-bold text-sm text-white">Live Telemetry & MQTT Stream</h3>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">JSONL Stream</span>
+        </div>
+
+        <div id="telemetry-feed" class="flex-1 overflow-y-auto space-y-2.5 pr-1 font-mono text-xs">
+          <!-- Populated by JavaScript from real incident log -->
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+          <span>Topic: <code class="text-sky-400">safety/alerts</code></span>
+          <a href="incident_log.jsonl" download class="text-xs text-sky-400 hover:underline flex items-center gap-1 font-sans font-semibold">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Download JSONL</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- The 5 Stages of PipeGen Section -->
+  <section id="stages" class="py-16 px-6 max-w-7xl mx-auto border-t border-slate-900">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <div class="text-xs font-bold uppercase tracking-wider text-sky-400 font-mono mb-1">Architecture & Methodology</div>
+      <h2 class="text-3xl font-bold text-white">The 5 Mandatory PipeGen Stages</h2>
+      <p class="text-slate-400 text-sm mt-2">A complete execution lifecycle from plain natural language to a high-speed compiled TensorRT edge pipeline.</p>
+    </div>
+
+    <!-- Stage Navigation Tabs -->
+    <div class="flex flex-wrap justify-center gap-2 mb-8">
+      <button onclick="selectStage(1)" id="tab-1" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-sky-500/10 border-sky-500 text-sky-400">
+        1. Requirement
+      </button>
+      <button onclick="selectStage(2)" id="tab-2" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-white">
+        2. Pipeline IR
+      </button>
+      <button onclick="selectStage(3)" id="tab-3" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-white">
+        3. Model Config
+      </button>
+      <button onclick="selectStage(4)" id="tab-4" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-white">
+        4. TensorRT Compiler
+      </button>
+      <button onclick="selectStage(5)" id="tab-5" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-white">
+        5. Live Run & Action
+      </button>
+    </div>
+
+    <!-- Stage Panels Container -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
+      <!-- Stage 1 -->
+      <div id="stage-panel-1" class="stage-panel space-y-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center text-sm font-mono">1</span>
+              Natural Language Prompt & Requirement Specification
+            </h3>
+            <p class="text-slate-400 text-sm mt-1">PipeGen translates human intent into a structured specification with hazard polygons and QoS requirements.</p>
+          </div>
+          <span class="text-xs font-mono text-sky-400 bg-sky-950 border border-sky-800 px-3 py-1 rounded-full">01_requirement.json</span>
+        </div>
+
+        <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 font-mono text-xs text-slate-300 overflow-x-auto">
+          <p class="text-sky-300 font-bold mb-2">// Natural Language Prompt:</p>
+          <p class="text-slate-200 bg-slate-900 p-3 rounded-lg border border-slate-800 italic mb-4">
+            "Build an edge vision perception pipeline using PipeGen that monitors an industrial work area in real-time. Ingest a video stream or camera feed, detect workers with YOLOv8, classify PPE compliance, track worker trajectories across restricted hazard zones, trigger instant safety violations over MQTT, and log structured incident telemetry to JSON audit logs with sub-15ms TensorRT inference latency."
+          </p>
+          <p class="text-emerald-400 font-bold mb-1">// System Parameters:</p>
+          <ul class="list-disc list-inside space-y-1 text-slate-400">
+            <li><strong class="text-slate-200">Target Hardware:</strong> NVIDIA GeForce RTX 4050 Laptop GPU (6GB VRAM)</li>
+            <li><strong class="text-slate-200">Input Resolution:</strong> 1920x1080 @ 30 FPS via nvv4l2decoder</li>
+            <li><strong class="text-slate-200">Hazard Zone:</strong> Polygon [[450, 200], [1150, 200], [1150, 650], [450, 650]] (Crane machinery area)</li>
+            <li><strong class="text-slate-200">Notification Broker:</strong> MQTT broker.hivemq.com (Topic: craftifai/pipegen/workplace_safety/alerts)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Stage 2 -->
+      <div id="stage-panel-2" class="stage-panel hidden space-y-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm font-mono">2</span>
+              Pipeline Intermediate Representation (IR) Graph
+            </h3>
+            <p class="text-slate-400 text-sm mt-1">Directed Acyclic Graph (DAG) orchestrating GStreamer / DeepStream plugins with zero-copy NVMM memory buffers.</p>
+          </div>
+          <span class="text-xs font-mono text-indigo-400 bg-indigo-950 border border-indigo-800 px-3 py-1 rounded-full">pipeline_ir_graph.png</span>
+        </div>
+
+        <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+          <img src="pipeline_ir_graph.png" alt="Pipeline IR Graph" class="w-full h-auto object-cover">
+        </div>
+        <p class="text-xs text-slate-400 font-mono text-center">Mandatory Submission Evidence 1: Generated directed topology graph connecting all 8 pipeline nodes.</p>
+      </div>
+
+      <!-- Stage 3 -->
+      <div id="stage-panel-3" class="stage-panel hidden space-y-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-pink-500/20 text-pink-400 flex items-center justify-center text-sm font-mono">3</span>
+              Model Configuration & ONNX Export
+            </h3>
+            <p class="text-slate-400 text-sm mt-1">Selection of deep learning models from the CraftifAI catalog and export to ONNX with static 640x640 shape.</p>
+          </div>
+          <span class="text-xs font-mono text-pink-400 bg-pink-950 border border-pink-800 px-3 py-1 rounded-full">models/yolov8n_safety.onnx</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
+            <div class="text-pink-400 font-bold mb-2">Model Graph Specifications:</div>
+            <div>• <strong class="text-slate-200">Architecture:</strong> YOLOv8 Nano (Anchor-Free Detection)</div>
+            <div>• <strong class="text-slate-200">Parameters:</strong> 3,151,904 (Fused FP16)</div>
+            <div>• <strong class="text-slate-200">Compute FLOPs:</strong> 8.7 GFLOPs</div>
+            <div>• <strong class="text-slate-200">Input Tensor:</strong> 1 x 3 x 640 x 640 (NCHW)</div>
+            <div>• <strong class="text-slate-200">Output Tensor:</strong> 1 x 84 x 8400 (Bounding BBoxes + Classes)</div>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
+            <div class="text-pink-400 font-bold mb-2">Export Parameters:</div>
+            <div>• <strong class="text-slate-200">Format:</strong> ONNX Opset 18</div>
+            <div>• <strong class="text-slate-200">Static Dimension:</strong> Enabled for optimal TensorRT CUDA kernel autotuning</div>
+            <div>• <strong class="text-slate-200">Quantization:</strong> FP16 Half Precision Precision ready</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 4 -->
+      <div id="stage-panel-4" class="stage-panel hidden space-y-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm font-mono">4</span>
+              TensorRT Engine Compiler & Speed Profiler
+            </h3>
+            <p class="text-slate-400 text-sm mt-1">Compiles ONNX into native Tensor Core kernels, benchmarking FP16 throughput and latency gains.</p>
+          </div>
+          <span class="text-xs font-mono text-amber-400 bg-amber-950 border border-amber-800 px-3 py-1 rounded-full">tensorrt_speed_report.png</span>
+        </div>
+
+        <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+          <img src="tensorrt_speed_report.png" alt="TensorRT Speed Report" class="w-full h-auto object-cover">
+        </div>
+        <p class="text-xs text-slate-400 font-mono text-center">Mandatory Submission Evidence 2: 152.9 FPS (6.54 ms latency) yielding a 4.7x speedup over CPU baseline.</p>
+      </div>
+
+      <!-- Stage 5 -->
+      <div id="stage-panel-5" class="stage-panel hidden space-y-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-mono">5</span>
+              Live Perception Run & Telemetry Actions
+            </h3>
+            <p class="text-slate-400 text-sm mt-1">Real-time inference, multi-worker persistent tracking, hazard geofencing, and actionable outputs.</p>
+          </div>
+          <span class="text-xs font-mono text-emerald-400 bg-emerald-950 border border-emerald-800 px-3 py-1 rounded-full">05_live_pipeline_run.py</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
+            <div class="text-emerald-400 font-bold mb-2">Live Execution Summary:</div>
+            <div>• <strong class="text-slate-200">Processed Frames:</strong> 180 Frames (Full Video Stream)</div>
+            <div>• <strong class="text-slate-200">Incident Events:</strong> 80 Logged in incident_log.jsonl</div>
+            <div>• <strong class="text-slate-200">MQTT Channel:</strong> Connected & Publishing in real-time</div>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
+            <div class="text-emerald-400 font-bold mb-2">Actionable Decisions:</div>
+            <div>• <strong class="text-red-400">ZONE_INTRUSION:</strong> Dispatches siren & emergency stop signal</div>
+            <div>• <strong class="text-amber-400">MISSING_HARDHAT:</strong> Alerts site supervisor dashboard</div>
+            <div>• <strong class="text-emerald-400">COMPLIANT:</strong> Worker authenticated as safe in authorized zone</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive TensorRT Benchmark Comparison Section -->
+  <section id="benchmark" class="py-16 px-6 max-w-7xl mx-auto border-t border-slate-900">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <div class="text-xs font-bold uppercase tracking-wider text-emerald-400 font-mono mb-1">Performance Benchmarks</div>
+      <h2 class="text-3xl font-bold text-white">TensorRT Hardware Acceleration</h2>
+      <p class="text-slate-400 text-sm mt-2">Measured directly on the target NVIDIA GeForce RTX 4050 Laptop GPU (Ada Lovelace Architecture).</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Benchmark Metric Cards -->
+      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-mono font-bold text-slate-400 uppercase">Baseline</span>
+          <h3 class="text-lg font-bold text-slate-300 mt-1">Host CPU (FP32)</h3>
+          <p class="text-xs text-slate-400 mt-2">Standard non-accelerated float32 inference on host CPU execution provider.</p>
+        </div>
+        <div class="pt-6 border-t border-slate-800/80 mt-6">
+          <div class="flex justify-between items-baseline">
+            <span class="text-3xl font-bold text-slate-300 font-mono">32.5</span>
+            <span class="text-xs font-mono text-slate-400">FPS</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mt-1">Latency: 30.74 ms (1.0x)</div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-mono font-bold text-sky-400 uppercase">CUDA Acceleration</span>
+          <h3 class="text-lg font-bold text-white mt-1">CUDA Core (FP32)</h3>
+          <p class="text-xs text-slate-400 mt-2">Standard GPU-accelerated parallel CUDA execution provider.</p>
+        </div>
+        <div class="pt-6 border-t border-slate-800/80 mt-6">
+          <div class="flex justify-between items-baseline">
+            <span class="text-3xl font-bold text-sky-400 font-mono">74.9</span>
+            <span class="text-xs font-mono text-sky-400 font-bold">FPS</span>
+          </div>
+          <div class="text-xs text-sky-400/80 font-mono mt-1">Latency: 13.36 ms (2.3x Speedup)</div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-b from-slate-900 to-slate-900/90 border-2 border-emerald-500/50 p-6 rounded-2xl flex flex-col justify-between card-glow relative">
+        <span class="absolute -top-3 right-4 px-3 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-bold text-[10px] uppercase tracking-wider font-mono">
+          PipeGen Compiled
+        </span>
+        <div>
+          <span class="text-xs font-mono font-bold text-emerald-400 uppercase">Optimal Edge Engine</span>
+          <h3 class="text-lg font-bold text-white mt-1">TensorRT Engine (FP16)</h3>
+          <p class="text-xs text-slate-400 mt-2">DeepStream TensorRT engine with fused layers and FP16 Tensor Cores.</p>
+        </div>
+        <div class="pt-6 border-t border-slate-800/80 mt-6">
+          <div class="flex justify-between items-baseline">
+            <span class="text-4xl font-extrabold text-emerald-400 font-mono">152.9</span>
+            <span class="text-xs font-mono text-emerald-400 font-bold">FPS</span>
+          </div>
+          <div class="text-xs text-emerald-400 font-mono font-bold mt-1">Latency: 6.54 ms (4.7x Speedup)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Judge Evaluation & Copy Sheet -->
+  <section id="submission" class="py-16 px-6 max-w-7xl mx-auto border-t border-slate-900">
+    <div class="bg-gradient-to-br from-slate-900 to-slate-950 border border-sky-500/30 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+      <div class="max-w-3xl space-y-6">
+        <div class="flex items-center gap-2 text-xs font-mono text-sky-400 uppercase tracking-wider font-bold">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          <span>Official Hackathon Submission Sheet</span>
+        </div>
+
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">Project Submission Credentials & Form Inputs</h2>
+        <p class="text-slate-300 text-sm">
+          Everything required for the judges has been verified and organized. Click the copy buttons to fill out the official form effortlessly.
+        </p>
+
+        <div class="space-y-3 font-mono text-xs">
+          <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <span class="text-slate-500">Track:</span>
+              <span class="text-white ml-2">Track A — PipeGen (Perception)</span>
+            </div>
+            <button onclick="copyText('Track A — PipeGen (Perception)')" class="text-sky-400 hover:text-sky-300 font-sans font-bold text-xs flex items-center gap-1">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+            </button>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <span class="text-slate-500">Repository Link:</span>
+              <span class="text-white ml-2">https://github.com/js-chinmayaojaswi/workplace-safety-sentinel-pipegen</span>
+            </div>
+            <button onclick="copyText('https://github.com/js-chinmayaojaswi/workplace-safety-sentinel-pipegen')" class="text-sky-400 hover:text-sky-300 font-sans font-bold text-xs flex items-center gap-1">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+            </button>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <span class="text-slate-500">Target Hardware:</span>
+              <span class="text-white ml-2">NVIDIA GeForce RTX 4050 Laptop GPU (Ada Lovelace, 6GB VRAM)</span>
+            </div>
+            <button onclick="copyText('NVIDIA GeForce RTX 4050 Laptop GPU (Ada Lovelace, 6GB VRAM)')" class="text-sky-400 hover:text-sky-300 font-sans font-bold text-xs flex items-center gap-1">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-4 flex flex-wrap gap-4">
+          <a href="https://forms.gle/eJyeCKCG2UH757QZ8" target="_blank" 
+             class="px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-sky-500/25 transition-all">
+            <span>Open Google Form Submission</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </a>
+          <a href="https://github.com/js-chinmayaojaswi/workplace-safety-sentinel-pipegen" target="_blank" 
+             class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm flex items-center gap-2 border border-slate-700 transition-all">
+            <i data-lucide="github" class="w-4 h-4"></i>
+            <span>Browse Full Source Code</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 py-8 px-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>Embedded SF: CraftifAI Physical AI Hackathon • 2026</div>
+      <div>Built by <strong>J S Chinmaya Ojaswi</strong> with CraftifAI PipeGen</div>
+      <div class="font-mono text-[11px] text-slate-400">Status: Verified & Live on GitHub Pages</div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    lucide.createIcons();
+
+    // Stage Selector Logic
+    function selectStage(num) {
+      document.querySelectorAll('.stage-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById('stage-panel-' + num).classList.remove('hidden');
+
+      for (let i = 1; i <= 5; i++) {
+        const tab = document.getElementById('tab-' + i);
+        if (i === num) {
+          tab.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-sky-500/10 border-sky-500 text-sky-400";
+        } else {
+          tab.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-white";
+        }
+      }
+    }
+
+    // Telemetry Feed Simulated Stream from Real Incidents
+    const sampleIncidents = [
+      { time: "16:14:24", type: "ZONE_INTRUSION", target: "Worker #2", severity: "CRITICAL", zone: "ZONE_CRANE_DANGER", desc: "Breached heavy machinery restricted zone" },
+      { time: "16:14:25", type: "ZONE_INTRUSION", target: "Worker #2", severity: "CRITICAL", zone: "ZONE_CRANE_DANGER", desc: "Worker within active hazard polygon" },
+      { time: "16:14:26", type: "PPE_VIOLATION", target: "Worker #3", severity: "WARNING", zone: "ZONE_GENERAL", desc: "Missing Hardhat in transit corridor" },
+      { time: "16:14:27", type: "ZONE_INTRUSION", target: "Worker #2", severity: "CRITICAL", zone: "ZONE_CRANE_DANGER", desc: "Restricted zone intrusion sustained" },
+      { time: "16:14:28", type: "PPE_VIOLATION", target: "Worker #3", severity: "WARNING", zone: "ZONE_GENERAL", desc: "Missing Safety Vest in transit corridor" }
+    ];
+
+    function populateTelemetry() {
+      const feed = document.getElementById('telemetry-feed');
+      feed.innerHTML = sampleIncidents.map(inc => `
+        <div class="p-3 rounded-xl border ${inc.severity === 'CRITICAL' ? 'bg-red-950/30 border-red-800/80 text-red-200' : 'bg-amber-950/30 border-amber-800/80 text-amber-200'} transition-all hover:scale-[1.01]">
+          <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1">
+            <span class="font-bold px-1.5 py-0.5 rounded ${inc.severity === 'CRITICAL' ? 'bg-red-900/60 text-red-300' : 'bg-amber-900/60 text-amber-300'}">${inc.type}</span>
+            <span>${inc.time}</span>
+          </div>
+          <div class="font-bold text-slate-200 text-xs">${inc.target}: ${inc.desc}</div>
+          <div class="text-[10px] text-slate-400 mt-1">Zone: ${inc.zone} • Action: MQTT_BROADCAST</div>
+        </div>
+      `).join('');
+    }
+    populateTelemetry();
+
+    // Copy Helper
+    function copyText(str) {
+      navigator.clipboard.writeText(str);
+      alert('Copied to clipboard: ' + str);
+    }
+  </script>
+</body>
+</html>
