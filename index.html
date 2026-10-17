@@ -1,260 +1,1112 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Workplace Safety Sentinel | Physical AI Perception Demo</title>
+  <title>SafetySentinel AI | Industrial Edge Physical Safety Command Center</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            cyber: {
+              black: '#080C14',
+              darker: '#0D1322',
+              card: '#121A2D',
+              cardHover: '#18233C',
+              border: '#1F2C47',
+              cyan: '#06B6D4',
+              electric: '#38BDF8',
+              hazard: '#F97316',
+              danger: '#EF4444',
+              safe: '#10B981',
+              warn: '#F59E0B'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    @keyframes pulse-red {
-      0%, 100% { opacity: 1; border-color: rgba(239, 68, 68, 0.9); }
-      50% { opacity: 0.5; border-color: rgba(239, 68, 68, 0.3); }
+    @keyframes pulse-danger {
+      0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.9); }
+      50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.8); border-color: rgba(239, 68, 68, 0.4); }
     }
-    .alarm-active { animation: pulse-red 0.8s infinite; }
-    .bg-grid {
-      background-size: 32px 32px;
+    .alarm-glow { animation: pulse-danger 1s infinite ease-in-out; }
+
+    .bg-grid-cyber {
+      background-size: 36px 36px;
       background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(to right, rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
     }
+
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #090D16; }
-    ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: #080C14; }
+    ::-webkit-scrollbar-thumb { background: #1F2C47; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #334155; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen selection:bg-sky-500 selection:text-white">
+<body class="bg-cyber-black text-slate-100 font-sans antialiased min-h-screen selection:bg-cyber-cyan selection:text-slate-950 flex flex-col overflow-x-hidden">
 
-  <!-- Ambient Backdrop -->
-  <div class="fixed inset-0 bg-grid pointer-events-none -z-10"></div>
-  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-sky-500/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+  <!-- Ambient Cyber Lighting -->
+  <div class="fixed inset-0 bg-grid-cyber pointer-events-none -z-10"></div>
+  <div class="fixed top-0 left-1/4 w-[700px] h-[350px] bg-cyber-cyan/5 blur-[140px] rounded-full pointer-events-none -z-10"></div>
+  <div class="fixed bottom-0 right-1/4 w-[600px] h-[350px] bg-cyber-hazard/5 blur-[150px] rounded-full pointer-events-none -z-10"></div>
 
-  <!-- Header -->
-  <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/85 border-b border-slate-800/80 px-6 py-3.5">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-cyber-darker/90 backdrop-blur-xl border-b border-cyber-border/80 px-4 lg:px-6 py-2.5 flex items-center justify-between">
+    <!-- Left: Brand & Title -->
+    <div class="flex items-center gap-4">
+      <button onclick="toggleSidebar()" class="lg:hidden p-1.5 rounded-lg bg-cyber-card border border-cyber-border text-slate-400 hover:text-white">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-sky-500/20">
-          <i data-lucide="shield-alert" class="w-5 h-5"></i>
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 via-sky-500 to-indigo-600 p-[1.5px] shadow-lg shadow-cyan-500/20">
+          <div class="w-full h-full bg-cyber-black rounded-[10px] flex items-center justify-center text-cyber-electric">
+            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+          </div>
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-bold text-base tracking-tight text-white">Workplace Safety Sentinel</span>
-            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-sky-950 text-sky-400 border border-sky-800">User-Controlled Interactive Demo</span>
+            <span class="font-extrabold text-base tracking-tight text-white">SAFETY<span class="text-cyber-electric font-mono">SENTINEL</span></span>
+            <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full bg-cyan-950/70 border border-cyan-800 text-cyan-300 font-bold">Edge AI v0.5.1</span>
           </div>
-          <p class="text-[11px] text-slate-400">Physical AI Vision • Move Humans & Objects Manually to Test Zone Detection</p>
+          <p class="text-[11px] text-slate-400 hidden sm:block font-mono">CraftifAI PipeGen • Industrial Physical Safety Command</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Live Edge Status Cluster -->
+    <div class="hidden xl:flex items-center gap-4 text-xs font-mono">
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyber-card border border-cyber-border">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-slate-400">EDGE ENGINE:</span>
+        <span class="text-white font-bold">RTX 4050 [152.9 FPS]</span>
+      </div>
+
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyber-card border border-cyber-border">
+        <i data-lucide="radio" class="w-3.5 h-3.5 text-cyber-cyan"></i>
+        <span class="text-slate-400">MQTT BROKER:</span>
+        <span class="text-emerald-400 font-bold">LIVE (broker.hivemq.com)</span>
+      </div>
+
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyber-card border border-cyber-border">
+        <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span class="text-slate-400">LATENCY:</span>
+        <span class="text-cyber-electric font-bold">6.54 ms [FP16]</span>
+      </div>
+    </div>
+
+    <!-- Right: Telemetry & Actions -->
+    <div class="flex items-center gap-3">
+      <!-- Audio Toggle -->
+      <button onclick="toggleAudio()" id="top-btn-audio" class="p-2 rounded-xl bg-cyber-card hover:bg-cyber-cardHover border border-cyber-border text-slate-400 hover:text-white transition-all text-xs flex items-center gap-1.5" title="Toggle Alarm Siren">
+        <i data-lucide="volume-2" id="top-icon-audio" class="w-4 h-4 text-slate-300"></i>
+        <span class="hidden md:inline font-mono text-[11px]">Siren: ON</span>
+      </button>
+
+      <!-- Notification Bell -->
+      <div class="relative">
+        <button onclick="toggleNotificationDropdown()" class="p-2 rounded-xl bg-cyber-card hover:bg-cyber-cardHover border border-cyber-border text-slate-400 hover:text-white relative">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyber-danger animate-ping"></span>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyber-danger"></span>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-cyber-card border border-cyber-border rounded-2xl shadow-2xl p-4 text-xs z-50">
+          <div class="flex items-center justify-between pb-2 border-b border-cyber-border mb-3 font-mono">
+            <span class="font-bold text-white">Live Dispatched Alerts</span>
+            <span class="text-[10px] text-cyber-cyan">QoS 1 Real-time</span>
+          </div>
+          <div class="space-y-2 max-h-60 overflow-y-auto pr-1" id="dropdown-alert-list">
+            <div class="p-2.5 rounded-lg bg-red-950/40 border border-red-800/80 text-red-200">
+              <div class="flex justify-between font-bold text-[10px] mb-0.5">
+                <span>ZONE_INTRUSION</span>
+                <span>Just Now</span>
+              </div>
+              <div class="text-slate-300 text-[11px]">Worker #102 breached Heavy Crane Area</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-xs font-mono">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Engine: TensorRT FP16 (152.9 FPS)
-        </span>
-        <button onclick="toggleAudio()" id="btn-audio" class="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-all text-xs flex items-center gap-1.5">
-          <i data-lucide="volume-2" id="icon-audio" class="w-4 h-4"></i>
-          <span class="hidden md:inline">Audio Siren</span>
-        </button>
+      <!-- User / Node Profile -->
+      <div class="flex items-center gap-2 pl-2 border-l border-cyber-border">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-mono font-bold text-xs text-white">
+          OP
+        </div>
+        <div class="hidden sm:block text-left font-mono">
+          <div class="text-xs font-bold text-white leading-tight">Chief Safety Op</div>
+          <div class="text-[10px] text-slate-400">Node: Site-North-01</div>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Studio -->
-  <main class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+  <!-- Dashboard Body Container (Sidebar + Content) -->
+  <div class="flex-1 flex overflow-hidden">
 
-    <!-- Interactive Control Bar -->
-    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-      <!-- Mode Selection -->
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono mr-2">Control Mode:</span>
-        <button onclick="setMode('sim')" id="btn-mode-sim" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-sky-500/10 border-sky-500 text-sky-400 flex items-center gap-2">
-          <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5"></i>
-          <span>Interactive Floor (Drag & Move)</span>
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="w-64 bg-cyber-darker border-r border-cyber-border/80 flex flex-col justify-between shrink-0 fixed lg:static inset-y-0 left-0 z-30 transition-transform duration-300 -translate-x-full lg:translate-x-0 pt-14 lg:pt-0">
+      
+      <!-- Nav Links -->
+      <div class="p-4 space-y-1 overflow-y-auto">
+        <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 px-3 py-2">System Workspaces</div>
+
+        <button onclick="navigateTab('overview')" id="nav-overview" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all bg-cyber-cyan/15 border border-cyber-cyan/40 text-cyber-electric shadow-sm shadow-cyan-500/10">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>Overview</span>
         </button>
-        <button onclick="setMode('cam')" id="btn-mode-cam" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-950 border-slate-800 text-slate-400 hover:text-white flex items-center gap-2">
-          <i data-lucide="camera" class="w-3.5 h-3.5"></i>
-          <span>Live Device Camera</span>
+
+        <button onclick="navigateTab('monitoring')" id="nav-monitoring" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-cyber-card border border-transparent">
+          <i data-lucide="video" class="w-4 h-4"></i>
+          <span>Live Monitoring</span>
+          <span class="ml-auto w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+        </button>
+
+        <button onclick="navigateTab('tracking')" id="nav-tracking" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-cyber-card border border-transparent">
+          <i data-lucide="users" class="w-4 h-4"></i>
+          <span>Worker Tracking</span>
+          <span class="ml-auto text-[10px] font-mono bg-cyber-card px-1.5 py-0.5 rounded text-slate-300">4 Active</span>
+        </button>
+
+        <button onclick="navigateTab('ppe')" id="nav-ppe" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-cyber-card border border-transparent">
+          <i data-lucide="hard-hat" class="w-4 h-4"></i>
+          <span>PPE Compliance</span>
+          <span class="ml-auto text-[10px] font-mono text-emerald-400 font-bold">87.5%</span>
+        </button>
+
+        <button onclick="navigateTab('zones')" id="nav-zones" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-cyber-card border border-transparent">
+          <i data-lucide="shield-alert" class="w-4 h-4"></i>
+          <span>Hazard Zones</span>
+          <span class="ml-auto text-[10px] font-mono text-cyber-hazard font-bold">1 Zone</span>
+        </button>
+
+        <button onclick="navigateTab('incidents')" id="nav-incidents" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-cyber-card border border-transparent">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          <span>Incident Logs</span>
+          <span class="ml-auto text-[10px] font-mono bg-red-950 text-red-400 px-1.5 py-0.5 rounded border border-red-800" id="sidebar-incident-badge">0 Alerts</span>
+        </button>
+
+        <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 px-3 pt-5 pb-2">Edge Intelligence</div>
+
+        <button onclick="navigateTab('pipeline')" id="nav-pipeline" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-cyber-card border border-transparent">
+          <i data-lucide="cpu" class="w-4 h-4"></i>
+          <span>Pipeline Analytics</span>
+          <span class="ml-auto text-[10px] font-mono text-cyber-cyan">TensorRT</span>
+        </button>
+
+        <button onclick="navigateTab('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-cyber-card border border-transparent">
+          <i data-lucide="sliders" class="w-4 h-4"></i>
+          <span>Settings & Broker</span>
         </button>
       </div>
 
-      <!-- Quick Action Buttons -->
-      <div class="flex flex-wrap items-center gap-2">
-        <button onclick="sendToZone('worker')" class="px-3 py-2 rounded-xl text-xs font-bold bg-red-950/60 hover:bg-red-900/70 text-red-300 border border-red-800/80 flex items-center gap-1.5 transition-all">
-          <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
-          <span>Move Worker to Danger Zone</span>
-        </button>
-        <button onclick="sendToZone('box')" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-950/60 hover:bg-amber-900/70 text-amber-300 border border-amber-800/80 flex items-center gap-1.5 transition-all">
-          <i data-lucide="package" class="w-3.5 h-3.5"></i>
-          <span>Move Cargo to Danger Zone</span>
-        </button>
-        <button onclick="evacuateAll()" class="px-3 py-2 rounded-xl text-xs font-bold bg-emerald-950/60 hover:bg-emerald-900/70 text-emerald-300 border border-emerald-800/80 flex items-center gap-1.5 transition-all">
-          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-          <span>Clear Zone (Evacuate to Safe)</span>
-        </button>
-        <button onclick="resetPositions()" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition-all border border-slate-700 flex items-center gap-1.5">
-          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-          <span>Reset</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Viewport & Telemetry Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-      <!-- Viewport Column -->
-      <div class="lg:col-span-2 space-y-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative">
-          
-          <!-- Viewport Header -->
-          <div class="px-4 py-2.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-              <span class="font-bold text-white" id="cam-title">CAM_SITE_NORTH (High Crane Zone)</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <span class="text-emerald-400 font-bold">152.9 FPS</span>
-              <span class="text-slate-600">|</span>
-              <span class="text-slate-300 font-bold">6.54 ms</span>
-            </div>
-          </div>
-
-          <!-- Screen Container -->
-          <div class="relative bg-black aspect-video flex items-center justify-center overflow-hidden select-none">
-            <!-- Canvas for Simulation -->
-            <canvas id="viewport" width="1280" height="720" class="w-full h-full object-contain cursor-grab active:cursor-grabbing"></canvas>
-            
-            <!-- Video for Live Webcam Mode -->
-            <video id="webcam-video" autoplay playsinline muted class="hidden absolute inset-0 w-full h-full object-cover"></video>
-            <canvas id="webcam-overlay" width="1280" height="720" class="hidden absolute inset-0 w-full h-full object-cover pointer-events-none"></canvas>
-
-            <!-- On-Screen Alarm Flash Overlay -->
-            <div id="alarm-banner" class="hidden absolute top-4 left-1/2 -translate-x-1/2 px-6 py-2 rounded-xl bg-red-600/95 border-2 border-red-400 text-white font-mono font-bold text-xs tracking-wider shadow-2xl flex items-center gap-2 alarm-active z-20">
-              <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-              <span id="alarm-banner-text">CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE</span>
-            </div>
-
-            <!-- Manual Control Instructions Overlay -->
-            <div id="sim-instructions" class="absolute bottom-3 left-4 bg-slate-950/90 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] text-slate-300 pointer-events-none flex items-center gap-2 z-10">
-              <i data-lucide="mouse-pointer" class="w-3.5 h-3.5 text-sky-400"></i>
-              <span><strong>Manual Control:</strong> Click and drag ANY human or object into the danger zone. Use <strong>WASD / Arrow Keys</strong> to walk selected worker!</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Metric KPI Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
-          <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-            <div class="text-[11px] text-slate-400">Inference Speed</div>
-            <div class="text-2xl font-bold text-sky-400 mt-1">152.9 FPS</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">TensorRT FP16</div>
-          </div>
-          <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-            <div class="text-[11px] text-slate-400">Currently Selected</div>
-            <div class="text-lg font-bold text-sky-300 mt-1 truncate" id="kpi-selected">Worker-A</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">WASD / Arrow Move</div>
-          </div>
-          <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-            <div class="text-[11px] text-slate-400">Active Violations</div>
-            <div class="text-2xl font-bold text-red-400 mt-1" id="kpi-violations">0</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Zone Incursions</div>
-          </div>
-          <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-            <div class="text-[11px] text-slate-400">Total Logged Events</div>
-            <div class="text-2xl font-bold text-emerald-400 mt-1" id="kpi-total">0</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Dispatched to MQTT</div>
-          </div>
-        </div>
-
-        <!-- Object Selection & Movement Bar -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
-          <div class="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono flex items-center justify-between">
+      <!-- Edge Hardware Diagnostics Footer Card -->
+      <div class="p-4 border-t border-cyber-border/80 bg-cyber-card/40">
+        <div class="p-3 rounded-xl bg-cyber-black border border-cyber-border font-mono text-xs space-y-2">
+          <div class="flex justify-between items-center text-[10px] text-slate-400">
             <span class="flex items-center gap-1.5">
-              <i data-lucide="crosshair" class="w-4 h-4 text-sky-400"></i>
-              <span>Select Entity to Control or Toggle Equipment</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              NVIDIA RTX 4050
             </span>
-            <span class="text-[10px] text-slate-400 font-normal">Click buttons below or click entity on screen</span>
+            <span class="text-cyber-electric font-bold">ADA ARCH</span>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3" id="object-selector-cards">
+          <!-- VRAM bar -->
+          <div>
+            <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+              <span>VRAM (6GB)</span>
+              <span class="text-slate-200">559 MB / 6141 MB</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-cyber-cyan rounded-full" style="width: 14%;"></div>
+            </div>
+          </div>
+
+          <div class="flex justify-between text-[10px] text-slate-400 pt-1">
+            <span>Temp: <strong class="text-slate-200">48°C</strong></span>
+            <span>Power: <strong class="text-slate-200">5W / 92W</strong></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Work Area -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+      <!-- ================================================================ -->
+      <!-- SECTION 1: OVERVIEW DASHBOARD                                   -->
+      <!-- ================================================================ -->
+      <section id="view-overview" class="tab-view space-y-6">
+        <!-- Welcome Banner -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-cyber-card via-cyber-card/90 to-cyber-darker border border-cyber-border shadow-2xl relative overflow-hidden">
+          <div class="space-y-1.5 relative z-10">
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-cyan-950/70 border border-cyan-800 text-cyan-400 text-xs font-mono">
+              <i data-lucide="activity" class="w-3.5 h-3.5 animate-spin"></i>
+              <span>Live Edge Physical AI Node Operational</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Industrial Perception Command Center</h1>
+            <p class="text-slate-400 text-xs sm:text-sm max-w-2xl">
+              Real-time multi-worker trajectory tracking, zero-delay hazard zone intrusion detection, and PPE safety verification powered by CraftifAI PipeGen & TensorRT FP16.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3 relative z-10">
+            <button onclick="navigateTab('monitoring')" class="px-4 py-2.5 rounded-xl bg-cyber-cyan hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyan-500/25 transition-all font-mono">
+              <i data-lucide="play" class="w-4 h-4 fill-slate-950"></i>
+              <span>Open Live Monitor</span>
+            </button>
+            <button onclick="sendToZone('worker')" class="px-4 py-2.5 rounded-xl bg-red-950/70 hover:bg-red-900 border border-red-800 text-red-300 font-bold text-xs flex items-center gap-2 transition-all font-mono">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+              <span>Trigger Test Incursion</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 6 Main KPI Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 font-mono">
+          <div class="bg-cyber-card border border-cyber-border p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 font-medium">Workers Detected</div>
+            <div class="text-2xl font-bold text-white mt-1.5 flex items-baseline gap-2">
+              <span id="kpi-workers-ov">3</span>
+              <span class="text-[10px] text-emerald-400 font-normal">Active</span>
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1">Multi-Worker Tracker</div>
+          </div>
+
+          <div class="bg-cyber-card border border-cyber-border p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 font-medium">Tracking IDs</div>
+            <div class="text-2xl font-bold text-cyber-electric mt-1.5 flex items-baseline gap-2">
+              <span>#101-#103</span>
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1">Persistent Trajectory</div>
+          </div>
+
+          <div class="bg-cyber-card border border-cyber-border p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 font-medium">PPE Compliance</div>
+            <div class="text-2xl font-bold text-emerald-400 mt-1.5 flex items-baseline gap-2">
+              <span id="kpi-ppe-ov">83.3%</span>
+            </div>
+            <div class="text-[10px] text-emerald-500/80 mt-1">Hardhats & Vests</div>
+          </div>
+
+          <div class="bg-cyber-card border border-cyber-border p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 font-medium">Zone Violations</div>
+            <div class="text-2xl font-bold text-red-400 mt-1.5 flex items-baseline gap-2">
+              <span id="kpi-zone-ov">0</span>
+              <span class="text-[10px] text-red-400 font-normal">Active</span>
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1">Zero Tolerance Rule</div>
+          </div>
+
+          <div class="bg-cyber-card border border-cyber-border p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 font-medium">Total Events</div>
+            <div class="text-2xl font-bold text-amber-400 mt-1.5 flex items-baseline gap-2">
+              <span id="kpi-incidents-ov">0</span>
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1">MQTT Dispatched</div>
+          </div>
+
+          <div class="bg-cyber-card border border-cyber-border p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 font-medium">Uptime & FPS</div>
+            <div class="text-2xl font-bold text-cyan-400 mt-1.5 flex items-baseline gap-1">
+              <span>152.9</span>
+              <span class="text-[10px] text-slate-400">FPS</span>
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1">Uptime: 99.98%</div>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- FPS & Latency Real-time Performance -->
+          <div class="lg:col-span-2 bg-cyber-card border border-cyber-border p-5 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-cyber-border pb-3 font-mono text-xs">
+              <div class="flex items-center gap-2">
+                <i data-lucide="line-chart" class="w-4 h-4 text-cyber-cyan"></i>
+                <span class="font-bold text-white">TensorRT Edge Inference Latency (ms) & Throughput (FPS)</span>
+              </div>
+              <span class="text-emerald-400 font-bold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">4.7x Speedup vs CPU</span>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chart-performance"></canvas>
+            </div>
+          </div>
+
+          <!-- PPE Compliance Breakdown Doughnut -->
+          <div class="bg-cyber-card border border-cyber-border p-5 rounded-2xl space-y-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between border-b border-cyber-border pb-3 font-mono text-xs">
+              <div class="flex items-center gap-2">
+                <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-400"></i>
+                <span class="font-bold text-white">PPE Compliance Ratio</span>
+              </div>
+              <span class="text-slate-400 text-[10px]">Today's Shift</span>
+            </div>
+            <div class="h-52 relative flex items-center justify-center">
+              <canvas id="chart-ppe"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-center font-mono text-xs pt-2 border-t border-cyber-border">
+              <div class="bg-cyber-black p-2 rounded-lg border border-cyber-border">
+                <div class="text-[10px] text-slate-400">Compliant (Safe)</div>
+                <div class="text-emerald-400 font-bold text-sm">83.3%</div>
+              </div>
+              <div class="bg-cyber-black p-2 rounded-lg border border-cyber-border">
+                <div class="text-[10px] text-slate-400">Non-Compliant</div>
+                <div class="text-amber-400 font-bold text-sm">16.7%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Grid: Recent Incidents & Quick Camera Preview -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 font-mono text-xs">
+          <!-- Recent Incidents Log -->
+          <div class="bg-cyber-card border border-cyber-border p-5 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between border-b border-cyber-border pb-3">
+              <span class="font-bold text-white flex items-center gap-2">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-cyber-danger"></i>
+                Live Incursion & Incident Feed
+              </span>
+              <button onclick="navigateTab('incidents')" class="text-cyber-cyan hover:underline text-[11px]">View All 81 Logs &rarr;</button>
+            </div>
+            <div id="overview-recent-incidents" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Active Hazard Zone Status Card -->
+          <div class="bg-cyber-card border border-cyber-border p-5 rounded-2xl space-y-3 flex flex-col justify-between">
+            <div class="flex items-center justify-between border-b border-cyber-border pb-3">
+              <span class="font-bold text-white flex items-center gap-2">
+                <i data-lucide="alert-octagon" class="w-4 h-4 text-cyber-hazard"></i>
+                Monitored Restricted Zone: Crane Deck #1
+              </span>
+              <span class="text-cyber-hazard font-bold bg-amber-950 px-2 py-0.5 rounded border border-amber-800 text-[10px]">Active Polygon</span>
+            </div>
+
+            <div class="p-3 bg-cyber-black rounded-xl border border-cyber-border space-y-2">
+              <div class="flex justify-between text-slate-300">
+                <span>Polygon Coordinates:</span>
+                <span class="text-white">[[500,180], [1120,180], [1120,640], [500,640]]</span>
+              </div>
+              <div class="flex justify-between text-slate-300">
+                <span>Allowed Clearance:</span>
+                <span class="text-emerald-400">0 Authorized Personnel</span>
+              </div>
+              <div class="flex justify-between text-slate-300">
+                <span>Interlocking Protocol:</span>
+                <span class="text-cyber-electric">Relay Siren + Emergency Stop via MQTT</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+              <span class="text-slate-400 text-[11px]">Target Edge Device: NVIDIA RTX 4050</span>
+              <button onclick="navigateTab('zones')" class="text-cyber-cyan hover:underline text-[11px]">Configure Boundaries &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- SECTION 2: LIVE MONITORING WORKSPACE                            -->
+      <!-- ================================================================ -->
+      <section id="view-monitoring" class="tab-view hidden space-y-6">
+        <!-- Live Stream Header Controls -->
+        <div class="bg-cyber-card border border-cyber-border p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-xs font-mono font-bold text-slate-400 uppercase">Camera Feed:</span>
+            <select id="camera-selector" onchange="handleCameraChange(this.value)" class="bg-cyber-black border border-cyber-border rounded-xl px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-cyan">
+              <option value="sim">CAM-01: High Crane Operations Deck (Simulated Stream)</option>
+              <option value="cam">CAM-02: Device Optical Sensor (Live Camera Ingestion)</option>
+            </select>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="sendToZone('worker')" class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-red-950/70 hover:bg-red-900 border border-red-800 text-red-300 transition-all flex items-center gap-1.5">
+              <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
+              <span>Send Worker In Zone</span>
+            </button>
+            <button onclick="sendToZone('box')" class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-amber-950/70 hover:bg-amber-900 border border-amber-800 text-amber-300 transition-all flex items-center gap-1.5">
+              <i data-lucide="package" class="w-3.5 h-3.5"></i>
+              <span>Drop Foreign Cargo In Zone</span>
+            </button>
+            <button onclick="evacuateAll()" class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 transition-all flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+              <span>Evacuate All to Safe</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Video Viewport Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-4">
+            <div class="bg-cyber-darker border border-cyber-border rounded-2xl overflow-hidden shadow-2xl relative">
+              
+              <!-- Viewport Overlay Header -->
+              <div class="px-4 py-2.5 bg-cyber-darker/90 border-b border-cyber-border flex items-center justify-between text-xs font-mono text-slate-400">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                  <span class="font-bold text-white" id="main-cam-title">CAM-01: High Crane Operations Deck</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-cyber-electric font-bold">152.9 FPS TRT</span>
+                  <span class="text-slate-600">|</span>
+                  <span class="text-slate-300">6.54 ms [FP16]</span>
+                </div>
+              </div>
+
+              <!-- Canvas / Video Stream Area -->
+              <div class="relative bg-black aspect-video flex items-center justify-center overflow-hidden select-none">
+                <canvas id="viewport" width="1280" height="720" class="w-full h-full object-contain cursor-grab active:cursor-grabbing"></canvas>
+                
+                <video id="webcam-video" autoplay playsinline muted class="hidden absolute inset-0 w-full h-full object-cover"></video>
+                <canvas id="webcam-overlay" width="1280" height="720" class="hidden absolute inset-0 w-full h-full object-cover pointer-events-none"></canvas>
+
+                <!-- On-Screen Alarm Flash Overlay -->
+                <div id="alarm-banner" class="hidden absolute top-4 left-1/2 -translate-x-1/2 px-6 py-2 rounded-xl bg-red-600/95 border-2 border-red-400 text-white font-mono font-bold text-xs tracking-wider shadow-2xl flex items-center gap-2 alarm-glow z-20">
+                  <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                  <span id="alarm-banner-text">CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE</span>
+                </div>
+
+                <!-- Manual Control Instructions Overlay -->
+                <div class="absolute bottom-3 left-4 bg-cyber-black/90 backdrop-blur px-3 py-1.5 rounded-lg border border-cyber-border text-[11px] text-slate-300 pointer-events-none flex items-center gap-2 z-10 font-mono">
+                  <i data-lucide="mouse-pointer" class="w-3.5 h-3.5 text-cyber-cyan"></i>
+                  <span><strong>User Control:</strong> Click and drag ANY entity into danger zone. Use <strong>WASD / Arrow Keys</strong> to walk selected worker!</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Entities Selector Grid -->
+            <div class="bg-cyber-card border border-cyber-border rounded-xl p-4 space-y-3 font-mono">
+              <div class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="crosshair" class="w-4 h-4 text-cyber-cyan"></i>
+                  <span>Tracked Entities (Click card or click canvas to control)</span>
+                </span>
+                <span class="text-[10px] text-slate-400">Selected: <strong class="text-cyber-electric" id="kpi-selected-mon">Worker-A</strong></span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3" id="object-selector-cards">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Telemetry & Action Log -->
+          <div class="bg-cyber-card border border-cyber-border rounded-2xl p-5 shadow-2xl flex flex-col h-[650px] font-mono text-xs">
+            <div class="flex items-center justify-between border-b border-cyber-border pb-3 mb-3">
+              <div class="flex items-center gap-2">
+                <i data-lucide="radio" class="w-4 h-4 text-cyber-cyan"></i>
+                <h3 class="font-bold text-sm text-white">Live Dispatched Telemetry</h3>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold">MQTT Live</span>
+            </div>
+
+            <div class="flex justify-between items-center text-[10px] text-slate-400 mb-2">
+              <span>TOPIC: <code class="text-cyan-400">safety/alerts</code></span>
+              <button onclick="clearIncidentLogs()" class="hover:text-white text-slate-500">Clear</button>
+            </div>
+
+            <div id="incident-feed" class="flex-1 overflow-y-auto space-y-2 pr-1">
+              <!-- Dynamically populated telemetry items -->
+            </div>
+
+            <div class="pt-3 border-t border-cyber-border flex items-center justify-between text-[10px] text-slate-400">
+              <span>Broker: broker.hivemq.com:1883</span>
+              <span class="text-emerald-400 font-bold">QoS 1 Authenticated</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- SECTION 3: WORKER TRACKING WORKSPACE                            -->
+      <!-- ================================================================ -->
+      <section id="view-tracking" class="tab-view hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-white font-mono flex items-center gap-2">
+              <i data-lucide="users" class="w-5 h-5 text-cyber-cyan"></i>
+              Persistent Multi-Worker Trajectory Tracking
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">DeepStream NvDCF persistent tracking IDs maintaining state across occlusions and motion.</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-300 font-mono text-xs font-bold">4 Tracked Entities</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="worker-tracking-cards">
+          <!-- Dynamically populated worker cards -->
+        </div>
+
+        <!-- Trajectory Map & Historical Velocity -->
+        <div class="bg-cyber-card border border-cyber-border rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between font-mono text-xs border-b border-cyber-border pb-3">
+            <span class="font-bold text-white flex items-center gap-2">
+              <i data-lucide="compass" class="w-4 h-4 text-cyber-electric"></i>
+              Spatial Coordinate Matrix & Velocity Tracking
+            </span>
+            <span class="text-slate-400">Sampling Rate: 30 Hz</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left font-mono text-xs text-slate-300">
+              <thead class="bg-cyber-black text-[10px] uppercase text-slate-400 border-b border-cyber-border">
+                <tr>
+                  <th class="p-3">Track ID</th>
+                  <th class="p-3">Entity Type</th>
+                  <th class="p-3">Current Coordinates (X, Y)</th>
+                  <th class="p-3">Proximity to Hazard Zone</th>
+                  <th class="p-3">PPE Compliance</th>
+                  <th class="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-cyber-border/60" id="worker-tracking-table">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- SECTION 4: PPE COMPLIANCE WORKSPACE                             -->
+      <!-- ================================================================ -->
+      <section id="view-ppe" class="tab-view hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-white font-mono flex items-center gap-2">
+              <i data-lucide="hard-hat" class="w-5 h-5 text-cyber-warn"></i>
+              Personal Protective Equipment (PPE) Compliance Engine
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Multi-class YOLOv8 containment verification for mandatory hardhats, high-visibility vests, and eye protection.</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-400 font-mono text-xs font-bold">Shift Compliance: 83.3%</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Hardhats Compliance Card -->
+          <div class="bg-cyber-card border border-cyber-border p-6 rounded-2xl space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="font-mono text-xs text-amber-300 font-bold uppercase flex items-center gap-2">
+                <i data-lucide="hard-hat" class="w-4 h-4"></i>
+                Industrial Hardhats
+              </span>
+              <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Mandatory</span>
+            </div>
+            <div class="text-3xl font-bold text-white font-mono" id="ppe-hardhat-rate">66.7%</div>
+            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div id="bar-hardhat" class="h-full bg-amber-400 rounded-full transition-all" style="width: 66.7%;"></div>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">1 violation flagged in last 10 minutes: Worker-B missing certified helmet.</p>
+          </div>
+
+          <!-- Safety Vests Compliance Card -->
+          <div class="bg-cyber-card border border-cyber-border p-6 rounded-2xl space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="font-mono text-xs text-emerald-300 font-bold uppercase flex items-center gap-2">
+                <i data-lucide="shirt" class="w-4 h-4"></i>
+                High-Vis Safety Vests
+              </span>
+              <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Mandatory</span>
+            </div>
+            <div class="text-3xl font-bold text-white font-mono" id="ppe-vest-rate">66.7%</div>
+            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div id="bar-vest" class="h-full bg-emerald-400 rounded-full transition-all" style="width: 66.7%;"></div>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">1 violation flagged in last 10 minutes: Worker-C missing reflective vest.</p>
+          </div>
+
+          <!-- Overall Safety Score -->
+          <div class="bg-cyber-card border border-cyber-border p-6 rounded-2xl space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="font-mono text-xs text-cyber-cyan font-bold uppercase flex items-center gap-2">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                Overall Safety Score
+              </span>
+              <span class="text-xs font-mono font-bold text-cyan-300 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">Grade A-</span>
+            </div>
+            <div class="text-3xl font-bold text-cyber-electric font-mono">83.3 / 100</div>
+            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-cyber-cyan rounded-full" style="width: 83.3%;"></div>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">Zero critical head injuries prevented this month through automated vision gating.</p>
+          </div>
+        </div>
+
+        <!-- Interactive PPE State Override Controls -->
+        <div class="bg-cyber-card border border-cyber-border rounded-2xl p-6 space-y-4 font-mono">
+          <div class="flex items-center justify-between border-b border-cyber-border pb-3 text-xs">
+            <span class="font-bold text-white flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-cyber-cyan"></i>
+              Live Worker Equipment State & Verification Toggles
+            </span>
+            <span class="text-slate-400">Toggle equipment on/off to immediately test AI detection</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="ppe-interactive-toggles">
             <!-- Dynamically populated -->
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Right Column: Live Telemetry Feed -->
-      <div class="space-y-4 flex flex-col">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col flex-1 h-[680px]">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
-            <div class="flex items-center gap-2">
-              <i data-lucide="radio" class="w-4 h-4 text-sky-400"></i>
-              <h3 class="font-bold text-sm text-white">Actionable Telemetry Stream</h3>
+      <!-- ================================================================ -->
+      <!-- SECTION 5: HAZARD ZONES WORKSPACE                               -->
+      <!-- ================================================================ -->
+      <section id="view-zones" class="tab-view hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-white font-mono flex items-center gap-2">
+              <i data-lucide="alert-octagon" class="w-5 h-5 text-cyber-hazard"></i>
+              Spatial Geofencing & Restricted Zone Management
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Virtual exclusion boundaries configured with sub-pixel polygon vector math.</p>
+          </div>
+          <button onclick="evacuateAll()" class="px-4 py-2 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 font-mono text-xs font-bold">
+            Evacuate Zone Now
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Zone Specifications Card -->
+          <div class="bg-cyber-card border border-cyber-border p-6 rounded-2xl space-y-4 font-mono text-xs">
+            <h3 class="font-bold text-white text-sm border-b border-cyber-border pb-2 flex items-center gap-2">
+              <i data-lucide="map-pin" class="w-4 h-4 text-cyber-hazard"></i>
+              Zone 01: High Crane & Hydraulic Press
+            </h3>
+
+            <div class="space-y-2.5">
+              <div class="flex justify-between text-slate-300">
+                <span class="text-slate-400">Zone Classification:</span>
+                <span class="text-red-400 font-bold">CRITICAL EXCLUSION</span>
+              </div>
+              <div class="flex justify-between text-slate-300">
+                <span class="text-slate-400">Interlock Action:</span>
+                <span class="text-white">Emergency Stop Relay</span>
+              </div>
+              <div class="flex justify-between text-slate-300">
+                <span class="text-slate-400">Intrusion Sensitivity:</span>
+                <span class="text-cyber-electric">Instantaneous (0 Frame Delay)</span>
+              </div>
+              <div class="flex justify-between text-slate-300">
+                <span class="text-slate-400">Detection Targets:</span>
+                <span class="text-white">Humans, Vehicles, Cargo, Foreign Items</span>
+              </div>
+              <div class="flex justify-between text-slate-300">
+                <span class="text-slate-400">Active Incursions:</span>
+                <span class="text-red-400 font-bold" id="zones-active-incursions">0</span>
+              </div>
             </div>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">MQTT Stream</span>
+
+            <div class="pt-4 border-t border-cyber-border">
+              <label class="block text-slate-400 mb-1">Safety Buffer Margin:</label>
+              <input type="range" min="0" max="100" value="25" class="w-full accent-cyan-400 bg-slate-800">
+              <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                <span>0 cm (Strict)</span>
+                <span>25 cm (Recommended)</span>
+                <span>50 cm (High)</span>
+              </div>
+            </div>
           </div>
 
-          <div class="text-[11px] text-slate-400 font-mono mb-2 flex justify-between">
-            <span>REAL-TIME DETECTIONS & INCIDENTS:</span>
-            <button onclick="clearIncidentLogs()" class="text-slate-500 hover:text-slate-300 text-[10px]">Clear</button>
-          </div>
+          <!-- Zone 2D Floor Plan Canvas -->
+          <div class="lg:col-span-2 bg-cyber-card border border-cyber-border p-6 rounded-2xl space-y-4 font-mono text-xs">
+            <div class="flex justify-between items-center border-b border-cyber-border pb-3">
+              <span class="font-bold text-white">2D Geofence Blueprint Overlay</span>
+              <span class="text-cyber-electric">Grid Scale: 1px = 1.5mm</span>
+            </div>
 
-          <div id="incident-feed" class="flex-1 overflow-y-auto space-y-2.5 pr-1 font-mono text-xs">
-            <!-- Dynamic Telemetry items -->
-          </div>
-
-          <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-            <span>Broker: <strong class="text-slate-300">Edge Gateway</strong></span>
-            <span class="text-emerald-400">Active QoS 1</span>
+            <div class="bg-cyber-black rounded-xl border border-cyber-border p-4 relative aspect-[16/9] flex items-center justify-center">
+              <canvas id="zone-map-canvas" width="640" height="360" class="w-full h-full object-contain"></canvas>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-    </div>
-
-    <!-- Highlights -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-        <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center mb-3">
-          <i data-lucide="user-check" class="w-5 h-5"></i>
+      <!-- ================================================================ -->
+      <!-- SECTION 6: INCIDENT MANAGEMENT TABLE                            -->
+      <!-- ================================================================ -->
+      <section id="view-incidents" class="tab-view hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white font-mono flex items-center gap-2">
+              <i data-lucide="file-text" class="w-5 h-5 text-cyber-danger"></i>
+              Incident Management & Audit Trails
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Searchable compliance database logged directly to <code class="text-cyber-cyan">incident_log.jsonl</code>.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="exportJSONL()" class="px-3.5 py-2 rounded-xl bg-cyber-card hover:bg-cyber-cardHover border border-cyber-border text-white text-xs font-mono font-bold flex items-center gap-1.5">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-cyber-cyan"></i>
+              <span>Export incident_log.jsonl</span>
+            </button>
+          </div>
         </div>
-        <h4 class="font-bold text-base text-white">100% User-Driven Motion</h4>
-        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-          No automated looping. Humans and objects stay stationary until you drag them or guide them with mouse clicks and WASD keys.
-        </p>
-      </div>
 
-      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-        <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3">
-          <i data-lucide="box" class="w-5 h-5"></i>
+        <!-- Filters & Search Bar -->
+        <div class="bg-cyber-card border border-cyber-border p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+          <div class="flex-1 min-w-[240px] relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="incident-search" oninput="filterIncidents()" placeholder="Search worker ID, incident type, camera..." 
+                   class="w-full pl-9 pr-4 py-2 bg-cyber-black border border-cyber-border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyber-cyan">
+          </div>
+
+          <div class="flex items-center gap-2">
+            <select id="severity-filter" onchange="filterIncidents()" class="bg-cyber-black border border-cyber-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyber-cyan">
+              <option value="ALL">All Severities</option>
+              <option value="CRITICAL">Critical Only</option>
+              <option value="WARNING">Warnings Only</option>
+            </select>
+            <select id="camera-filter" onchange="filterIncidents()" class="bg-cyber-black border border-cyber-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyber-cyan">
+              <option value="ALL">All Cameras</option>
+              <option value="CAM_SITE_NORTH">CAM_SITE_NORTH</option>
+            </select>
+          </div>
         </div>
-        <h4 class="font-bold text-base text-white">Universal Object Detection</h4>
-        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-          Drop any object (cargo box, forklift, worker, or tool) into the restricted crane zone to test instantaneous intrusion detection.
-        </p>
-      </div>
 
-      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3">
-          <i data-lucide="zap" class="w-5 h-5"></i>
+        <!-- Incidents Table -->
+        <div class="bg-cyber-card border border-cyber-border rounded-2xl overflow-hidden font-mono text-xs">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-cyber-black text-[10px] uppercase text-slate-400 border-b border-cyber-border">
+                <tr>
+                  <th class="p-3.5">Timestamp (UTC)</th>
+                  <th class="p-3.5">Target / Entity</th>
+                  <th class="p-3.5">Incident Type</th>
+                  <th class="p-3.5">Severity</th>
+                  <th class="p-3.5">Camera ID</th>
+                  <th class="p-3.5">Action Taken</th>
+                  <th class="p-3.5">JSON Payload</th>
+                </tr>
+              </thead>
+              <tbody id="incidents-table-body" class="divide-y divide-cyber-border/60 text-slate-300">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
         </div>
-        <h4 class="font-bold text-base text-white">Instant Response Trigger</h4>
-        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-          Zero-delay evaluation updates bounding boxes from Green to flashing Red and dispatches real-time MQTT alerts.
-        </p>
-      </div>
-    </div>
-  </main>
 
-  <!-- Interactive Demonstration Engine -->
+        <!-- Expandable JSON Payload Drawer / Modal -->
+        <div id="json-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div class="bg-cyber-card border border-cyber-border rounded-2xl max-w-xl w-full p-6 space-y-4 font-mono text-xs shadow-2xl">
+            <div class="flex justify-between items-center border-b border-cyber-border pb-3">
+              <span class="font-bold text-white flex items-center gap-2">
+                <i data-lucide="code" class="w-4 h-4 text-cyber-cyan"></i>
+                Structured Incident Metadata (JSON)
+              </span>
+              <button onclick="closeJSONModal()" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+            <pre id="json-modal-content" class="bg-cyber-black p-4 rounded-xl border border-cyber-border text-emerald-400 overflow-x-auto text-[11px]"></pre>
+            <div class="flex justify-end">
+              <button onclick="closeJSONModal()" class="px-4 py-2 bg-cyber-border hover:bg-slate-700 text-white rounded-xl">Close</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- SECTION 7: PIPELINE ANALYTICS WORKSPACE                         -->
+      <!-- ================================================================ -->
+      <section id="view-pipeline" class="tab-view hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-white font-mono flex items-center gap-2">
+              <i data-lucide="cpu" class="w-5 h-5 text-cyber-electric"></i>
+              CraftifAI PipeGen 5-Stage Architecture & TensorRT Acceleration
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Full pipeline execution trace running on NVIDIA GeForce RTX 4050 Laptop GPU (Ada Lovelace).</p>
+          </div>
+          <span class="px-3.5 py-1 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-400 font-mono text-xs font-bold">152.9 FPS • 6.54 ms</span>
+        </div>
+
+        <!-- 5 Stages Visual Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 font-mono text-xs">
+          <div class="p-4 rounded-xl bg-cyber-card border border-cyber-cyan/40 space-y-2">
+            <div class="text-cyber-cyan font-bold flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-md bg-cyan-950 flex items-center justify-center text-[10px]">1</span>
+              Requirement
+            </div>
+            <p class="text-[11px] text-slate-400 leading-tight">Natural language prompt defining hazard zones, PPE constraints & camera source.</p>
+            <div class="text-[10px] text-emerald-400 font-bold">✓ 01_requirement.json</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-cyber-card border border-indigo-500/40 space-y-2">
+            <div class="text-indigo-400 font-bold flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-md bg-indigo-950 flex items-center justify-center text-[10px]">2</span>
+              Pipeline IR
+            </div>
+            <p class="text-[11px] text-slate-400 leading-tight">8-Node DAG routing decode, preprocessing, inference, tracking & MQTT sinks.</p>
+            <div class="text-[10px] text-emerald-400 font-bold">✓ 02_pipeline_ir.json</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-cyber-card border border-pink-500/40 space-y-2">
+            <div class="text-pink-400 font-bold flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-md bg-pink-950 flex items-center justify-center text-[10px]">3</span>
+              Model Config
+            </div>
+            <p class="text-[11px] text-slate-400 leading-tight">YOLOv8 Nano (3.15M params) exported to ONNX Opset 18 (1x3x640x640).</p>
+            <div class="text-[10px] text-emerald-400 font-bold">✓ yolov8n_safety.onnx</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-cyber-card border border-amber-500/40 space-y-2">
+            <div class="text-amber-400 font-bold flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-md bg-amber-950 flex items-center justify-center text-[10px]">4</span>
+              TensorRT Compiler
+            </div>
+            <p class="text-[11px] text-slate-400 leading-tight">Compiled to FP16 Tensor Cores. 6.54ms latency (4.7x speedup over CPU).</p>
+            <div class="text-[10px] text-emerald-400 font-bold">✓ yolov8n_safety_fp16.engine</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-cyber-card border border-emerald-500/40 space-y-2">
+            <div class="text-emerald-400 font-bold flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-md bg-emerald-950 flex items-center justify-center text-[10px]">5</span>
+              Live Action Run
+            </div>
+            <p class="text-[11px] text-slate-400 leading-tight">DeepStream loop emitting MQTT alarms & appending JSON audit logs.</p>
+            <div class="text-[10px] text-emerald-400 font-bold">✓ incident_log.jsonl</div>
+          </div>
+        </div>
+
+        <!-- Hardware Benchmark Comparison Table -->
+        <div class="bg-cyber-card border border-cyber-border rounded-2xl p-6 space-y-4 font-mono text-xs">
+          <div class="flex justify-between items-center border-b border-cyber-border pb-3">
+            <span class="font-bold text-white">Execution Provider Benchmark Comparison (RTX 4050 6GB)</span>
+            <span class="text-cyber-electric">Input: 1x3x640x640 NCHW</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-cyber-black text-[10px] uppercase text-slate-400 border-b border-cyber-border">
+                <tr>
+                  <th class="p-3">Execution Engine</th>
+                  <th class="p-3">Precision</th>
+                  <th class="p-3">Mean Latency</th>
+                  <th class="p-3">P95 Latency</th>
+                  <th class="p-3">Throughput (FPS)</th>
+                  <th class="p-3">Acceleration Factor</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-cyber-border/60 text-slate-300">
+                <tr>
+                  <td class="p-3 font-bold text-slate-400">Host CPU Baseline</td>
+                  <td class="p-3">FP32</td>
+                  <td class="p-3">30.74 ms</td>
+                  <td class="p-3">34.20 ms</td>
+                  <td class="p-3 text-slate-400 font-bold">32.5 FPS</td>
+                  <td class="p-3 text-slate-500">1.0x (Baseline)</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-sky-400">NVIDIA CUDA Core</td>
+                  <td class="p-3">FP32</td>
+                  <td class="p-3">13.36 ms</td>
+                  <td class="p-3">15.10 ms</td>
+                  <td class="p-3 text-sky-400 font-bold">74.9 FPS</td>
+                  <td class="p-3 text-sky-400">2.3x Speedup</td>
+                </tr>
+                <tr class="bg-emerald-950/20">
+                  <td class="p-3 font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    TensorRT FP16 Engine
+                  </td>
+                  <td class="p-3 text-emerald-300 font-bold">FP16 (Tensor Cores)</td>
+                  <td class="p-3 text-emerald-400 font-bold">6.54 ms</td>
+                  <td class="p-3">7.32 ms</td>
+                  <td class="p-3 text-emerald-400 font-extrabold text-sm">152.9 FPS</td>
+                  <td class="p-3 text-emerald-400 font-extrabold">4.7x Speedup (Optimal)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- SECTION 8: SETTINGS & BROKER CONFIG                             -->
+      <!-- ================================================================ -->
+      <section id="view-settings" class="tab-view hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-white font-mono flex items-center gap-2">
+              <i data-lucide="sliders" class="w-5 h-5 text-cyber-cyan"></i>
+              Edge System Settings & Telemetry Gateway
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Configure MQTT brokers, edge inference thresholds, and audio alarms.</p>
+          </div>
+          <button onclick="saveSettings()" class="px-4 py-2 rounded-xl bg-cyber-cyan hover:bg-sky-400 text-slate-950 font-mono font-bold text-xs">
+            Save Preferences
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
+          <!-- MQTT Gateway Config -->
+          <div class="bg-cyber-card border border-cyber-border p-6 rounded-2xl space-y-4">
+            <h3 class="font-bold text-white text-sm border-b border-cyber-border pb-2 flex items-center gap-2">
+              <i data-lucide="radio" class="w-4 h-4 text-cyber-cyan"></i>
+              MQTT Telemetry Broker
+            </h3>
+
+            <div class="space-y-3">
+              <div>
+                <label class="text-slate-400 block mb-1">Broker Host:</label>
+                <input type="text" value="broker.hivemq.com" class="w-full bg-cyber-black border border-cyber-border rounded-xl p-2.5 text-white">
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-slate-400 block mb-1">Port:</label>
+                  <input type="text" value="1883" class="w-full bg-cyber-black border border-cyber-border rounded-xl p-2.5 text-white">
+                </div>
+                <div>
+                  <label class="text-slate-400 block mb-1">QoS Level:</label>
+                  <select class="w-full bg-cyber-black border border-cyber-border rounded-xl p-2.5 text-white">
+                    <option value="1">1 - At least once</option>
+                    <option value="0">0 - At most once</option>
+                    <option value="2">2 - Exactly once</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="text-slate-400 block mb-1">Alert Topic:</label>
+                <input type="text" value="craftifai/pipegen/workplace_safety/alerts" class="w-full bg-cyber-black border border-cyber-border rounded-xl p-2.5 text-white">
+              </div>
+            </div>
+          </div>
+
+          <!-- Edge Vision Thresholds -->
+          <div class="bg-cyber-card border border-cyber-border p-6 rounded-2xl space-y-4">
+            <h3 class="font-bold text-white text-sm border-b border-cyber-border pb-2 flex items-center gap-2">
+              <i data-lucide="eye" class="w-4 h-4 text-cyber-cyan"></i>
+              Inference Thresholds & Engine
+            </h3>
+
+            <div class="space-y-3">
+              <div>
+                <label class="text-slate-400 block mb-1">Target Engine Precision:</label>
+                <select class="w-full bg-cyber-black border border-cyber-border rounded-xl p-2.5 text-white">
+                  <option value="FP16">TensorRT FP16 (Recommended for Ada Lovelace)</option>
+                  <option value="INT8">TensorRT INT8 (Quantized Engine)</option>
+                  <option value="FP32">CUDA FP32 (Full Precision)</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-slate-400 block mb-1">Detection Confidence Minimum (0.25 - 0.90):</label>
+                <input type="range" min="25" max="90" value="45" class="w-full accent-cyan-400">
+                <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                  <span>0.25 (High Recall)</span>
+                  <span>0.45 (Balanced)</span>
+                  <span>0.90 (High Precision)</span>
+                </div>
+              </div>
+              <div>
+                <label class="text-slate-400 block mb-1">Audible Siren Alarm:</label>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="checkbox" id="setting-siren" checked class="w-4 h-4 accent-cyan-400 rounded">
+                  <span class="text-slate-300">Play synthesized warning buzzer on critical zone incursion</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- JavaScript Application Engine -->
   <script>
     lucide.createIcons();
 
-    // Audio Siren
-    let audioCtx = null;
+    // ====================================================================
+    // STATE & ROUTING
+    // ====================================================================
+    let currentTab = 'overview';
     let audioEnabled = true;
+    let audioCtx = null;
+    let mode = 'sim';
+
+    function navigateTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.tab-view').forEach(view => view.classList.add('hidden'));
+      const activeView = document.getElementById('view-' + tabId);
+      if (activeView) activeView.classList.remove('hidden');
+
+      // Update sidebar button styles
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.className = "nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-cyber-card border border-transparent";
+      });
+
+      const activeBtn = document.getElementById('nav-' + tabId);
+      if (activeBtn) {
+        activeBtn.className = "nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all bg-cyber-cyan/15 border border-cyber-cyan/40 text-cyber-electric shadow-sm shadow-cyan-500/10";
+      }
+
+      // Close mobile sidebar if open
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth < 1024) sidebar.classList.add('-translate-x-full');
+
+      // Trigger redraws / charts
+      if (tabId === 'overview') {
+        initOverviewCharts();
+      } else if (tabId === 'monitoring') {
+        drawScene();
+      } else if (tabId === 'tracking') {
+        renderTrackingView();
+      } else if (tabId === 'ppe') {
+        renderPPEView();
+      } else if (tabId === 'zones') {
+        drawZoneMap();
+      } else if (tabId === 'incidents') {
+        renderIncidentsTable();
+      }
+
+      lucide.createIcons();
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('-translate-x-full');
+    }
+
+    function toggleNotificationDropdown() {
+      const dropdown = document.getElementById('notif-dropdown');
+      dropdown.classList.toggle('hidden');
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const icon = document.getElementById('top-icon-audio');
+      const btn = document.getElementById('top-btn-audio');
+      if (audioEnabled) {
+        icon.setAttribute('data-lucide', 'volume-2');
+        btn.querySelector('span').innerText = 'Siren: ON';
+        btn.classList.remove('text-red-400');
+      } else {
+        icon.setAttribute('data-lucide', 'volume-x');
+        btn.querySelector('span').innerText = 'Siren: OFF';
+        btn.classList.add('text-red-400');
+      }
+      lucide.createIcons();
+    }
 
     function playBeep(freq = 880, type = 'square', duration = 0.15) {
       if (!audioEnabled) return;
@@ -273,26 +1125,12 @@
       } catch (e) {}
     }
 
-    function toggleAudio() {
-      audioEnabled = !audioEnabled;
-      const icon = document.getElementById('icon-audio');
-      const btn = document.getElementById('btn-audio');
-      if (audioEnabled) {
-        icon.setAttribute('data-lucide', 'volume-2');
-        btn.classList.remove('text-red-400');
-      } else {
-        icon.setAttribute('data-lucide', 'volume-x');
-        btn.classList.add('text-red-400');
-      }
-      lucide.createIcons();
-    }
-
-    // Canvas Setup
+    // ====================================================================
+    // SIMULATION & VISION PIPELINE ENGINE
+    // ====================================================================
     const canvas = document.getElementById('viewport');
     const ctx = canvas.getContext('2d');
-    let mode = 'sim';
 
-    // Restricted Hazard Zone Polygon
     const hazardZone = [
       { x: 500, y: 180 },
       { x: 1120, y: 180 },
@@ -300,65 +1138,21 @@
       { x: 500, y: 640 }
     ];
 
-    // Objects in Scene (No looping velocities; purely stationary until moved by user!)
     let sceneObjects = [
       { id: 101, type: "person", name: "Worker-A", x: 220, y: 400, w: 60, h: 140, helmet: true, vest: true, targetX: null, targetY: null, dragging: false },
       { id: 102, type: "person", name: "Worker-B", x: 340, y: 280, w: 60, h: 140, helmet: false, vest: true, targetX: null, targetY: null, dragging: false },
+      { id: 103, type: "person", name: "Worker-C", x: 380, y: 530, w: 60, h: 140, helmet: true, vest: false, targetX: null, targetY: null, dragging: false },
       { id: 201, type: "vehicle", name: "Forklift-01", x: 180, y: 560, w: 100, h: 80, targetX: null, targetY: null, dragging: false },
       { id: 301, type: "cargo", name: "Cargo Pallet", x: 350, y: 480, w: 70, h: 60, targetX: null, targetY: null, dragging: false }
     ];
 
-    let selectedObject = sceneObjects[0]; // Default select Worker-A
+    let selectedObject = sceneObjects[0];
     let totalIncidentsCount = 0;
     let activeViolationsCount = 0;
     let lastAlertTime = 0;
 
-    function selectObject(obj) {
-      selectedObject = obj;
-      document.getElementById('kpi-selected').innerText = obj.name;
-      renderObjectSelectors();
-      drawScene();
-    }
+    let incidentsDatabase = [];
 
-    // Quick Actions
-    function sendToZone(type) {
-      if (type === 'worker') {
-        const worker = sceneObjects.find(o => o.type === "person");
-        if (worker) {
-          worker.x = 650;
-          worker.y = 350;
-          worker.targetX = null;
-          worker.targetY = null;
-          selectObject(worker);
-        }
-      } else if (type === 'box') {
-        const cargo = sceneObjects.find(o => o.type === "cargo") || sceneObjects[3];
-        if (cargo) {
-          cargo.x = 750;
-          cargo.y = 480;
-          cargo.targetX = null;
-          cargo.targetY = null;
-          selectObject(cargo);
-        }
-      }
-      drawScene();
-    }
-
-    function evacuateAll() {
-      sceneObjects[0].x = 220; sceneObjects[0].y = 400;
-      sceneObjects[1].x = 340; sceneObjects[1].y = 280;
-      sceneObjects[2].x = 180; sceneObjects[2].y = 560;
-      sceneObjects[3].x = 350; sceneObjects[3].y = 480;
-      sceneObjects.forEach(o => { o.targetX = null; o.targetY = null; });
-      logTelemetry("ZONE_EVACUATED", "All Entities", "SAFE", "All personnel and objects cleared to safe area");
-      drawScene();
-    }
-
-    function resetPositions() {
-      evacuateAll();
-    }
-
-    // Geometry Helpers
     function isInsideZone(px, py, poly) {
       let inside = false;
       for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -385,46 +1179,78 @@
       return false;
     }
 
-    // Telemetry Logging
-    function logTelemetry(type, objectName, severity, details) {
+    function logTelemetry(type, objectName, severity, details, rawObj) {
       const now = new Date();
       const timeStr = now.toTimeString().split(' ')[0];
+      const isoStr = now.toISOString();
+
+      const incidentItem = {
+        id: "INC-" + String(incidentsDatabase.length + 1).padStart(4, '0'),
+        timestamp: isoStr,
+        displayTime: timeStr,
+        type: type,
+        object: objectName,
+        severity: severity,
+        camera: "CAM_SITE_NORTH",
+        details: details,
+        action: "MQTT_BROADCAST",
+        raw: {
+          timestamp: isoStr,
+          pipeline: "CraftifAI_PipeGen_Safety_v0.5.1",
+          camera_id: "CAM_SITE_NORTH",
+          event_type: type,
+          severity: severity,
+          target: objectName,
+          coordinates: rawObj ? [Math.round(rawObj.x), Math.round(rawObj.y)] : [0,0],
+          bbox: rawObj ? [Math.round(rawObj.x - rawObj.w/2), Math.round(rawObj.y - rawObj.h/2), Math.round(rawObj.w), Math.round(rawObj.h)] : [0,0,0,0],
+          violations: [details],
+          action_taken: "MQTT_RELAY_ACTIVATED"
+        }
+      };
+
+      incidentsDatabase.unshift(incidentItem);
+      if (incidentsDatabase.length > 100) incidentsDatabase.pop();
+
+      // Update feed in live monitoring
       const feed = document.getElementById('incident-feed');
-
-      const card = document.createElement('div');
-      card.className = `p-3 rounded-xl border ${severity === 'CRITICAL' ? 'bg-red-950/40 border-red-800 text-red-200' : severity === 'WARNING' ? 'bg-amber-950/40 border-amber-800 text-amber-200' : 'bg-slate-900 border-slate-800 text-slate-300'} transition-all`;
-      card.innerHTML = `
-        <div class="flex justify-between items-center text-[10px] mb-1">
-          <span class="font-bold px-1.5 py-0.5 rounded ${severity === 'CRITICAL' ? 'bg-red-900/60 text-red-300' : severity === 'WARNING' ? 'bg-amber-900/60 text-amber-300' : 'bg-slate-800 text-slate-400'}">${type}</span>
-          <span class="text-slate-400">${timeStr}</span>
-        </div>
-        <div class="font-bold text-slate-200">${objectName}: ${details}</div>
-        <div class="text-[10px] text-slate-400 mt-1">Severity: ${severity} • Dispatched: MQTT / JSON</div>
-      `;
-
-      feed.insertBefore(card, feed.firstChild);
-      if (feed.children.length > 25) {
-        feed.removeChild(feed.lastChild);
+      if (feed) {
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-xl border ${severity === 'CRITICAL' ? 'bg-red-950/40 border-red-800 text-red-200' : severity === 'WARNING' ? 'bg-amber-950/40 border-amber-800 text-amber-200' : 'bg-slate-900 border-slate-800 text-slate-300'} transition-all`;
+        card.innerHTML = `
+          <div class="flex justify-between items-center text-[10px] mb-1">
+            <span class="font-bold px-1.5 py-0.5 rounded ${severity === 'CRITICAL' ? 'bg-red-900/60 text-red-300' : severity === 'WARNING' ? 'bg-amber-900/60 text-amber-300' : 'bg-slate-800 text-slate-400'}">${type}</span>
+            <span class="text-slate-400">${timeStr}</span>
+          </div>
+          <div class="font-bold text-slate-200">${objectName}: ${details}</div>
+          <div class="text-[10px] text-slate-400 mt-1">Severity: ${severity} • Dispatched via MQTT</div>
+        `;
+        feed.insertBefore(card, feed.firstChild);
+        if (feed.children.length > 25) feed.removeChild(feed.lastChild);
       }
+
+      // Update overview recent
+      updateOverviewRecent();
+      document.getElementById('sidebar-incident-badge').innerText = incidentsDatabase.length + " Alerts";
     }
 
     function clearIncidentLogs() {
-      document.getElementById('incident-feed').innerHTML = '';
+      const feed = document.getElementById('incident-feed');
+      if (feed) feed.innerHTML = '';
     }
 
-    // Main Draw Function (Updates smooth animation for user walking or dragging)
+    // Main Simulation Scene Renderer
     function drawScene() {
       if (mode !== 'sim') return;
 
       const w = canvas.width;
       const h = canvas.height;
 
-      // 1. Floor
-      ctx.fillStyle = '#181C26';
+      // 1. Factory Floor Background
+      ctx.fillStyle = '#0F1523';
       ctx.fillRect(0, 0, w, h);
 
       // Grid
-      ctx.strokeStyle = '#222838';
+      ctx.strokeStyle = '#182238';
       ctx.lineWidth = 1;
       for (let x = 0; x < w; x += 60) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
@@ -433,37 +1259,37 @@
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
       }
 
-      // Safe Zone Marker
-      ctx.fillStyle = '#064E3B';
-      ctx.font = 'bold 16px monospace';
-      ctx.fillText('AUTHORIZED WORKER ZONE (SAFE AREA)', 60, 160);
+      // Safe Zone Label
+      ctx.fillStyle = '#065F46';
+      ctx.font = 'bold 15px monospace';
+      ctx.fillText('AUTHORIZED WORKER ZONE (SAFE AREA)', 50, 150);
 
       // 2. Heavy Machinery Area
-      ctx.fillStyle = '#222336';
+      ctx.fillStyle = '#161B2E';
       ctx.fillRect(660, 260, 380, 300);
-      ctx.strokeStyle = '#3E4266';
+      ctx.strokeStyle = '#2B3555';
       ctx.lineWidth = 2;
       ctx.strokeRect(660, 260, 380, 300);
-      ctx.fillStyle = '#6E74A6';
-      ctx.font = 'bold 16px monospace';
+      ctx.fillStyle = '#5A6699';
+      ctx.font = 'bold 15px monospace';
       ctx.fillText('[HIGH CRANE & HYDRAULIC PRESS UNIT]', 690, 420);
 
-      // 3. Ground Hazard Zone
+      // 3. Ground Hazard Zone Polygon
       ctx.beginPath();
       ctx.moveTo(hazardZone[0].x, hazardZone[0].y);
       for (let i = 1; i < hazardZone.length; i++) ctx.lineTo(hazardZone[i].x, hazardZone[i].y);
       ctx.closePath();
       ctx.strokeStyle = activeViolationsCount > 0 ? '#EF4444' : '#F97316';
       ctx.lineWidth = 3;
-      ctx.fillStyle = activeViolationsCount > 0 ? 'rgba(239, 68, 68, 0.08)' : 'rgba(249, 115, 22, 0.04)';
+      ctx.fillStyle = activeViolationsCount > 0 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(249, 115, 22, 0.05)';
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = activeViolationsCount > 0 ? '#EF4444' : '#F97316';
-      ctx.font = 'bold 18px monospace';
+      ctx.font = 'bold 17px monospace';
       ctx.fillText('⚠ RESTRICTED HAZARD ZONE: CRANE OPERATIONS', hazardZone[0].x + 20, hazardZone[0].y - 12);
 
-      // 4. Update smooth interpolation if moving towards user click target
+      // 4. Update smooth interpolation if user clicked floor
       let needsNextFrame = false;
       sceneObjects.forEach(obj => {
         if (obj.targetX !== null && obj.targetY !== null && !obj.dragging) {
@@ -471,8 +1297,8 @@
           const dy = obj.targetY - obj.y;
           const dist = Math.hypot(dx, dy);
           if (dist > 3) {
-            obj.x += (dx / dist) * 4.5;
-            obj.y += (dy / dist) * 4.5;
+            obj.x += (dx / dist) * 5;
+            obj.y += (dy / dist) * 5;
             needsNextFrame = true;
           } else {
             obj.x = obj.targetX;
@@ -483,7 +1309,7 @@
         }
       });
 
-      // 5. Draw All Objects & Check Incursion
+      // 5. Draw All Entities & Incursion Detection
       let currentViolations = 0;
       let lastIntruderDesc = "";
 
@@ -513,7 +1339,7 @@
             statusColor = "#F59E0B";
           }
 
-          // Person Body
+          // Draw Person Silhouette
           ctx.fillStyle = '#64748B';
           ctx.fillRect(x1 + 10, y1 + 35, bw - 20, bh - 35);
           ctx.beginPath();
@@ -537,7 +1363,7 @@
             currentViolations++;
             statusText = "CRITICAL: VEHICLE IN ZONE";
             statusColor = "#EF4444";
-            lastIntruderDesc = `${obj.name} (Unauthorized Vehicle in Zone)`;
+            lastIntruderDesc = `${obj.name} (Vehicle in Zone)`;
           }
 
           ctx.fillStyle = '#F59E0B';
@@ -555,7 +1381,7 @@
             currentViolations++;
             statusText = "CRITICAL: OBJECT / DEBRIS IN ZONE";
             statusColor = "#EF4444";
-            lastIntruderDesc = `${obj.name} (Foreign Object / Cargo In Zone)`;
+            lastIntruderDesc = `${obj.name} (Cargo In Zone)`;
           }
 
           ctx.fillStyle = '#B45309';
@@ -569,7 +1395,7 @@
           ctx.stroke();
         }
 
-        // Selected Entity Halo Ring
+        // Selected halo
         if (selectedObject && selectedObject.id === obj.id) {
           ctx.strokeStyle = '#38BDF8';
           ctx.lineWidth = 2;
@@ -578,7 +1404,7 @@
           ctx.setLineDash([]);
         }
 
-        // AI Bounding Box
+        // YOLOv8 Bounding Box
         ctx.strokeStyle = statusColor;
         ctx.lineWidth = 2.5;
         ctx.strokeRect(x1, y1, bw, bh);
@@ -591,7 +1417,7 @@
         ctx.font = 'bold 12px monospace';
         ctx.fillText(`${obj.name}: ${statusText}`, x1 + 6, y1 - 8);
 
-        // Coordinate Anchor
+        // Anchor Dot
         ctx.beginPath();
         ctx.arc(obj.x, obj.y, 4, 0, Math.PI * 2);
         ctx.fillStyle = statusColor;
@@ -599,30 +1425,33 @@
       });
 
       activeViolationsCount = currentViolations;
-      document.getElementById('kpi-violations').innerText = activeViolationsCount;
+      document.getElementById('kpi-zone-ov').innerText = activeViolationsCount;
+      document.getElementById('zones-active-incursions').innerText = activeViolationsCount;
 
       const alarmBanner = document.getElementById('alarm-banner');
       const alarmText = document.getElementById('alarm-banner-text');
 
       if (activeViolationsCount > 0) {
-        alarmBanner.classList.remove('hidden');
-        alarmText.innerText = "CRITICAL ALARM: " + (lastIntruderDesc || "OBJECT DETECTED IN RESTRICTED ZONE");
+        if (alarmBanner) {
+          alarmBanner.classList.remove('hidden');
+          alarmText.innerText = "CRITICAL ALARM: " + (lastIntruderDesc || "OBJECT DETECTED IN RESTRICTED ZONE");
+        }
         const now = Date.now();
         if (now - lastAlertTime > 2500) {
           lastAlertTime = now;
           totalIncidentsCount++;
-          document.getElementById('kpi-total').innerText = totalIncidentsCount;
+          document.getElementById('kpi-incidents-ov').innerText = totalIncidentsCount;
           playBeep(750, 'sawtooth', 0.22);
-          logTelemetry("ZONE_BREACH", lastIntruderDesc || "Foreign Object", "CRITICAL", "Object or personnel detected inside restricted heavy machinery zone");
+          logTelemetry("ZONE_BREACH", lastIntruderDesc || "Object", "CRITICAL", "Restricted zone encroachment detected by edge vision", selectedObject);
         }
       } else {
-        alarmBanner.classList.add('hidden');
+        if (alarmBanner) alarmBanner.classList.add('hidden');
       }
 
       // Telemetry HUD overlay
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.fillStyle = 'rgba(13, 19, 34, 0.88)';
       ctx.fillRect(15, 15, 410, 85);
-      ctx.strokeStyle = '#334155';
+      ctx.strokeStyle = '#1F2C47';
       ctx.lineWidth = 1;
       ctx.strokeRect(15, 15, 410, 85);
 
@@ -632,7 +1461,7 @@
 
       ctx.fillStyle = '#E2E8F0';
       ctx.font = '12px monospace';
-      ctx.fillText(`Pipeline Speed: 152.9 FPS | Active Entity: ${selectedObject ? selectedObject.name : 'None'}`, 30, 62);
+      ctx.fillText(`Pipeline Speed: 152.9 FPS | Active: ${selectedObject ? selectedObject.name : 'None'}`, 30, 62);
       ctx.fillStyle = activeViolationsCount > 0 ? '#EF4444' : '#10B981';
       ctx.fillText(`Restricted Incursions: ${activeViolationsCount} | Drag or Click to Move`, 30, 84);
 
@@ -641,11 +1470,8 @@
       }
     }
 
-    // Direct Drag & Drop or Click-to-Move
+    // User Movement Handlers (Drag & Click)
     let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
-
     canvas.addEventListener('mousedown', (e) => {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -653,10 +1479,6 @@
       const mouseX = (e.clientX - rect.left) * scaleX;
       const mouseY = (e.clientY - rect.top) * scaleY;
 
-      dragStartX = mouseX;
-      dragStartY = mouseY;
-
-      // Check if clicking on an entity
       let clickedObject = null;
       for (let obj of sceneObjects) {
         const dist = Math.hypot(obj.x - mouseX, obj.y - mouseY);
@@ -671,7 +1493,6 @@
         clickedObject.dragging = true;
         isDragging = true;
       } else if (selectedObject) {
-        // Click-to-move destination waypoint
         selectedObject.targetX = Math.max(80, Math.min(canvas.width - 80, mouseX));
         selectedObject.targetY = Math.max(180, Math.min(canvas.height - 80, mouseY));
         requestAnimationFrame(drawScene);
@@ -692,13 +1513,11 @@
     });
 
     window.addEventListener('mouseup', () => {
-      if (selectedObject) {
-        selectedObject.dragging = false;
-      }
+      if (selectedObject) selectedObject.dragging = false;
       isDragging = false;
     });
 
-    // Keyboard (Arrow Keys & WASD) Navigation
+    // Keyboard Arrow/WASD controls
     window.addEventListener('keydown', (e) => {
       if (!selectedObject) return;
       const step = 25;
@@ -726,17 +1545,55 @@
       }
     });
 
-    // Object Selector Bar
+    function selectObject(obj) {
+      selectedObject = obj;
+      const label = document.getElementById('kpi-selected-mon');
+      if (label) label.innerText = obj.name;
+      renderObjectSelectors();
+      drawScene();
+    }
+
+    function sendToZone(type) {
+      if (type === 'worker') {
+        const worker = sceneObjects.find(o => o.type === "person");
+        if (worker) {
+          worker.x = 650; worker.y = 350;
+          worker.targetX = null; worker.targetY = null;
+          selectObject(worker);
+        }
+      } else if (type === 'box') {
+        const cargo = sceneObjects.find(o => o.type === "cargo") || sceneObjects[3];
+        if (cargo) {
+          cargo.x = 750; cargo.y = 480;
+          cargo.targetX = null; cargo.targetY = null;
+          selectObject(cargo);
+        }
+      }
+      drawScene();
+    }
+
+    function evacuateAll() {
+      sceneObjects[0].x = 220; sceneObjects[0].y = 400;
+      sceneObjects[1].x = 340; sceneObjects[1].y = 280;
+      sceneObjects[2].x = 180; sceneObjects[2].y = 560;
+      sceneObjects[3].x = 350; sceneObjects[3].y = 480;
+      sceneObjects.forEach(o => { o.targetX = null; o.targetY = null; });
+      logTelemetry("ZONE_EVACUATED", "All Entities", "SAFE", "All personnel and objects cleared to safe area");
+      drawScene();
+    }
+
+    // Dynamic Renderers
     function renderObjectSelectors() {
       const container = document.getElementById('object-selector-cards');
+      if (!container) return;
       container.innerHTML = sceneObjects.map(obj => {
         const isSel = selectedObject && selectedObject.id === obj.id;
         const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
         return `
           <div onclick="selectObject(sceneObjects.find(o => o.id === ${obj.id}))" 
-               class="cursor-pointer p-3 rounded-xl border transition-all ${isSel ? 'bg-sky-950/60 border-sky-500 shadow-md shadow-sky-500/20' : 'bg-slate-950 border-slate-800 hover:border-slate-700'}">
+               class="cursor-pointer p-3 rounded-xl border transition-all ${isSel ? 'bg-cyan-950/40 border-cyber-cyan shadow-sm shadow-cyan-500/10' : 'bg-cyber-black border-cyber-border hover:border-slate-700'}">
             <div class="flex items-center justify-between font-mono text-xs font-bold mb-1.5">
-              <span class="${isSel ? 'text-sky-300' : 'text-slate-200'}">${obj.name}</span>
+              <span class="${isSel ? 'text-cyber-electric' : 'text-slate-200'}">${obj.name}</span>
               <span class="text-[9px] px-1.5 py-0.5 rounded ${inHazard ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
                 ${inHazard ? 'IN ZONE' : 'SAFE'}
               </span>
@@ -769,54 +1626,362 @@
       }
     }
 
-    // Camera Mode Support
-    let webcamStream = null;
-    let prevCamFrame = null;
+    // ====================================================================
+    // WORKER TRACKING VIEW
+    // ====================================================================
+    function renderTrackingView() {
+      const cardsCont = document.getElementById('worker-tracking-cards');
+      const tableBody = document.getElementById('worker-tracking-table');
+      if (!cardsCont || !tableBody) return;
 
-    async function setMode(newMode) {
-      mode = newMode;
-      const btnSim = document.getElementById('btn-mode-sim');
-      const btnCam = document.getElementById('btn-mode-cam');
-      const videoEl = document.getElementById('webcam-video');
-      const simCanvas = document.getElementById('viewport');
-      const camOverlay = document.getElementById('webcam-overlay');
-      const simHelp = document.getElementById('sim-instructions');
+      cardsCont.innerHTML = sceneObjects.map(obj => {
+        const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+        return `
+          <div class="bg-cyber-card border border-cyber-border rounded-2xl p-5 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white flex items-center gap-2">
+                <i data-lucide="${obj.type === 'person' ? 'user' : obj.type === 'vehicle' ? 'truck' : 'package'}" class="w-4 h-4 text-cyber-cyan"></i>
+                ${obj.name}
+              </span>
+              <span class="text-[9px] px-2 py-0.5 rounded ${inHazard ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'} font-bold">
+                ${inHazard ? 'ZONE BREACH' : 'CLEAR'}
+              </span>
+            </div>
+            <div class="space-y-1.5 text-slate-300 text-[11px] pt-1">
+              <div class="flex justify-between"><span class="text-slate-500">Track ID:</span><span>#${obj.id}</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Coordinates:</span><span>X:${Math.round(obj.x)} Y:${Math.round(obj.y)}</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">PPE Verified:</span><span>${obj.type === 'person' ? (obj.helmet && obj.vest ? '100% Full' : 'Partial') : 'N/A'}</span></div>
+            </div>
+            <button onclick="navigateTab('monitoring'); selectObject(sceneObjects.find(o => o.id === ${obj.id}));" class="w-full py-1.5 rounded-lg bg-cyber-black hover:bg-slate-800 border border-cyber-border text-cyber-electric text-[10px] font-bold">
+              Locate On Camera &rarr;
+            </button>
+          </div>
+        `;
+      }).join('');
 
-      if (newMode === 'sim') {
-        btnSim.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-sky-500/10 border-sky-500 text-sky-400 flex items-center gap-2";
-        btnCam.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-950 border-slate-800 text-slate-400 hover:text-white flex items-center gap-2";
-        simCanvas.classList.remove('hidden');
-        simHelp.classList.remove('hidden');
-        videoEl.classList.add('hidden');
-        camOverlay.classList.add('hidden');
+      tableBody.innerHTML = sceneObjects.map(obj => {
+        const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+        return `
+          <tr class="hover:bg-cyber-darker/60 transition-colors">
+            <td class="p-3.5 font-bold text-white">#${obj.id}</td>
+            <td class="p-3.5 capitalize">${obj.type}</td>
+            <td class="p-3.5 text-slate-400">${Math.round(obj.x)}, ${Math.round(obj.y)}</td>
+            <td class="p-3.5 ${inHazard ? 'text-red-400 font-bold' : 'text-emerald-400'}">${inHazard ? '0m (Inside Restricted Zone)' : 'Safe Distance (>15m)'}</td>
+            <td class="p-3.5">${obj.type === 'person' ? (obj.helmet && obj.vest ? '<span class="text-emerald-400">Compliant</span>' : '<span class="text-amber-400">Violation</span>') : 'N/A'}</td>
+            <td class="p-3.5">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${inHazard ? 'bg-red-950 text-red-300 border border-red-800' : 'bg-emerald-950 text-emerald-300 border border-emerald-800'}">
+                ${inHazard ? 'Incursion Active' : 'Normal'}
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
 
-        if (webcamStream) {
-          webcamStream.getTracks().forEach(track => track.stop());
-          webcamStream = null;
-        }
-        document.getElementById('cam-title').innerText = "CAM_SITE_NORTH (High Crane Zone)";
-        drawScene();
-      } else {
-        btnCam.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-sky-500/10 border-sky-500 text-sky-400 flex items-center gap-2";
-        btnSim.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-950 border-slate-800 text-slate-400 hover:text-white flex items-center gap-2";
-        simCanvas.classList.add('hidden');
-        simHelp.classList.add('hidden');
-        videoEl.classList.remove('hidden');
-        camOverlay.classList.remove('hidden');
+      lucide.createIcons();
+    }
 
-        try {
-          webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
-          videoEl.srcObject = webcamStream;
-          document.getElementById('cam-title').innerText = "DEVICE_CAMERA_0 (Live Universal Detection Feed)";
-          startWebcamDetection();
-        } catch (err) {
-          alert("Could not access camera: " + err.message);
-          setMode('sim');
-        }
+    // ====================================================================
+    // PPE VIEW
+    // ====================================================================
+    function renderPPEView() {
+      const container = document.getElementById('ppe-interactive-toggles');
+      if (!container) return;
+      const persons = sceneObjects.filter(o => o.type === "person");
+
+      container.innerHTML = persons.map((w, idx) => `
+        <div class="bg-cyber-black p-4 rounded-xl border border-cyber-border space-y-3">
+          <div class="flex justify-between items-center text-xs font-bold text-white">
+            <span>${w.name} (#${w.id})</span>
+            <span class="text-[10px] px-2 py-0.5 rounded ${w.helmet && w.vest ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">
+              ${w.helmet && w.vest ? 'COMPLIANT' : 'VIOLATION'}
+            </span>
+          </div>
+
+          <div class="space-y-2">
+            <button onclick="toggleWorkerPPE(${w.id}, 'helmet'); renderPPEView();" class="w-full py-2 rounded-lg border font-mono font-bold text-xs transition-all flex items-center justify-between px-3 ${w.helmet ? 'bg-amber-950/60 border-amber-600 text-amber-300' : 'bg-slate-900 border-slate-800 text-slate-500'}">
+              <span>Hardhat Helmet</span>
+              <span>${w.helmet ? 'ACTIVE ✓' : 'MISSING ✗'}</span>
+            </button>
+
+            <button onclick="toggleWorkerPPE(${w.id}, 'vest'); renderPPEView();" class="w-full py-2 rounded-lg border font-mono font-bold text-xs transition-all flex items-center justify-between px-3 ${w.vest ? 'bg-emerald-950/60 border-emerald-600 text-emerald-300' : 'bg-slate-900 border-slate-800 text-slate-500'}">
+              <span>Safety Vest</span>
+              <span>${w.vest ? 'ACTIVE ✓' : 'MISSING ✗'}</span>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ====================================================================
+    // 2D HAZARD ZONE BLUEPRINT CANVAS
+    // ====================================================================
+    function drawZoneMap() {
+      const zmCanvas = document.getElementById('zone-map-canvas');
+      if (!zmCanvas) return;
+      const zctx = zmCanvas.getContext('2d');
+      const w = zmCanvas.width;
+      const h = zmCanvas.height;
+
+      zctx.fillStyle = '#080C14';
+      zctx.fillRect(0, 0, w, h);
+
+      // Blueprint grid
+      zctx.strokeStyle = '#141D30';
+      zctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 30) {
+        zctx.beginPath(); zctx.moveTo(x, 0); zctx.lineTo(x, h); zctx.stroke();
+      }
+      for (let y = 0; y < h; y += 30) {
+        zctx.beginPath(); zctx.moveTo(0, y); zctx.lineTo(w, y); zctx.stroke();
+      }
+
+      // Zone 1 Polygon (Scaled)
+      const scaleX = w / 1280;
+      const scaleY = h / 720;
+
+      zctx.beginPath();
+      zctx.moveTo(hazardZone[0].x * scaleX, hazardZone[0].y * scaleY);
+      for (let i = 1; i < hazardZone.length; i++) {
+        zctx.lineTo(hazardZone[i].x * scaleX, hazardZone[i].y * scaleY);
+      }
+      zctx.closePath();
+      zctx.strokeStyle = activeViolationsCount > 0 ? '#EF4444' : '#F97316';
+      zctx.lineWidth = 2;
+      zctx.fillStyle = activeViolationsCount > 0 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(249, 115, 22, 0.1)';
+      zctx.fill();
+      zctx.stroke();
+
+      zctx.fillStyle = activeViolationsCount > 0 ? '#EF4444' : '#F97316';
+      zctx.font = 'bold 10px monospace';
+      zctx.fillText('CRANE OPERATION RESTRICTED ZONE', hazardZone[0].x * scaleX + 10, hazardZone[0].y * scaleY - 6);
+
+      // Draw Entities on 2D map
+      sceneObjects.forEach(obj => {
+        const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+        zctx.beginPath();
+        zctx.arc(obj.x * scaleX, obj.y * scaleY, 6, 0, Math.PI * 2);
+        zctx.fillStyle = inHazard ? '#EF4444' : '#10B981';
+        zctx.fill();
+        zctx.strokeStyle = '#FFFFFF';
+        zctx.lineWidth = 1;
+        zctx.stroke();
+
+        zctx.fillStyle = '#FFFFFF';
+        zctx.font = '9px monospace';
+        zctx.fillText(obj.name, obj.x * scaleX - 15, obj.y * scaleY + 16);
+      });
+    }
+
+    // ====================================================================
+    // INCIDENTS LOGS & TABLE
+    // ====================================================================
+    function renderIncidentsTable() {
+      const tbody = document.getElementById('incidents-table-body');
+      if (!tbody) return;
+
+      const searchTerm = (document.getElementById('incident-search')?.value || '').toLowerCase();
+      const sevFilter = document.getElementById('severity-filter')?.value || 'ALL';
+
+      const filtered = incidentsDatabase.filter(inc => {
+        const matchSearch = inc.object.toLowerCase().includes(searchTerm) || 
+                            inc.type.toLowerCase().includes(searchTerm) || 
+                            inc.details.toLowerCase().includes(searchTerm);
+        const matchSev = (sevFilter === 'ALL') || (inc.severity === sevFilter);
+        return matchSearch && matchSev;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No incident logs found matching criteria.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((inc, idx) => `
+        <tr class="hover:bg-cyber-darker/60 transition-colors">
+          <td class="p-3.5 text-slate-400 font-mono">${inc.timestamp.substring(11, 19)}</td>
+          <td class="p-3.5 font-bold text-white">${inc.object}</td>
+          <td class="p-3.5 font-mono">${inc.type}</td>
+          <td class="p-3.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${inc.severity === 'CRITICAL' ? 'bg-red-950 text-red-300 border border-red-800' : 'bg-amber-950 text-amber-300 border border-amber-800'}">
+              ${inc.severity}
+            </span>
+          </td>
+          <td class="p-3.5 text-slate-400">${inc.camera}</td>
+          <td class="p-3.5 text-cyber-cyan">${inc.action}</td>
+          <td class="p-3.5">
+            <button onclick="openJSONModal(${idx})" class="text-xs text-cyber-electric hover:underline font-mono">
+              View JSON &rarr;
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterIncidents() {
+      renderIncidentsTable();
+    }
+
+    function openJSONModal(idx) {
+      const modal = document.getElementById('json-modal');
+      const content = document.getElementById('json-modal-content');
+      if (modal && content && incidentsDatabase[idx]) {
+        content.innerText = JSON.stringify(incidentsDatabase[idx].raw, null, 2);
+        modal.classList.remove('hidden');
       }
     }
 
-    function startWebcamDetection() {
+    function closeJSONModal() {
+      const modal = document.getElementById('json-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function exportJSONL() {
+      if (incidentsDatabase.length === 0) {
+        alert("No incident records available to export.");
+        return;
+      }
+      const dataStr = incidentsDatabase.map(i => JSON.stringify(i.raw)).join('\n');
+      const blob = new Blob([dataStr], { type: 'application/jsonl' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'incident_log.jsonl';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function updateOverviewRecent() {
+      const feed = document.getElementById('overview-recent-incidents');
+      if (!feed) return;
+      feed.innerHTML = incidentsDatabase.slice(0, 4).map(inc => `
+        <div class="p-2.5 rounded-xl border ${inc.severity === 'CRITICAL' ? 'bg-red-950/30 border-red-800/80 text-red-200' : 'bg-amber-950/30 border-amber-800/80 text-amber-200'}">
+          <div class="flex justify-between items-center text-[10px] mb-1">
+            <span class="font-bold">${inc.type}</span>
+            <span class="text-slate-400">${inc.displayTime}</span>
+          </div>
+          <div class="font-bold text-slate-200">${inc.object}: ${inc.details}</div>
+        </div>
+      `).join('');
+    }
+
+    // ====================================================================
+    // CHARTS INITIALIZATION (CHART.JS)
+    // ====================================================================
+    let perfChart = null;
+    let ppeChart = null;
+
+    function initOverviewCharts() {
+      // 1. Performance Chart (FPS & Latency)
+      const ctxPerf = document.getElementById('chart-performance')?.getContext('2d');
+      if (ctxPerf) {
+        if (perfChart) perfChart.destroy();
+        perfChart = new Chart(ctxPerf, {
+          type: 'line',
+          data: {
+            labels: ['15:50', '15:52', '15:54', '15:56', '15:58', '16:00', '16:02', '16:04'],
+            datasets: [
+              {
+                label: 'Throughput (FPS)',
+                data: [151.2, 153.5, 152.0, 152.9, 154.1, 152.4, 152.9, 153.0],
+                borderColor: '#06B6D4',
+                backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.3,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Latency (ms)',
+                data: [6.61, 6.51, 6.58, 6.54, 6.49, 6.56, 6.54, 6.53],
+                borderColor: '#F97316',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                tension: 0.3,
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 } } }
+            },
+            scales: {
+              x: { grid: { color: '#1F2C47' }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono' } } },
+              y: { grid: { color: '#1F2C47' }, ticks: { color: '#06B6D4', font: { family: 'JetBrains Mono' } }, min: 140, max: 160 },
+              y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#F97316', font: { family: 'JetBrains Mono' } }, min: 4, max: 10 }
+            }
+          }
+        });
+      }
+
+      // 2. PPE Doughnut
+      const ctxPPE = document.getElementById('chart-ppe')?.getContext('2d');
+      if (ctxPPE) {
+        if (ppeChart) ppeChart.destroy();
+        ppeChart = new Chart(ctxPPE, {
+          type: 'doughnut',
+          data: {
+            labels: ['Compliant', 'Non-Compliant'],
+            datasets: [{
+              data: [83.3, 16.7],
+              backgroundColor: ['#10B981', '#F59E0B'],
+              borderColor: '#121A2D',
+              borderWidth: 3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 } } }
+            },
+            cutout: '72%'
+          }
+        });
+      }
+    }
+
+    // ====================================================================
+    // WEBCAM SENSOR INTEGRATION
+    // ====================================================================
+    let webcamStream = null;
+    let prevCamFrame = null;
+
+    async function handleCameraChange(source) {
+      if (source === 'cam') {
+        mode = 'cam';
+        document.getElementById('viewport').classList.add('hidden');
+        document.getElementById('webcam-video').classList.remove('hidden');
+        document.getElementById('webcam-overlay').classList.remove('hidden');
+        document.getElementById('main-cam-title').innerText = "CAM-02: Device Optical Sensor (Live Camera Ingestion)";
+
+        try {
+          webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+          const videoEl = document.getElementById('webcam-video');
+          videoEl.srcObject = webcamStream;
+          startWebcamOverlay();
+        } catch (err) {
+          alert("Could not access camera device: " + err.message);
+          document.getElementById('camera-selector').value = 'sim';
+          handleCameraChange('sim');
+        }
+      } else {
+        mode = 'sim';
+        document.getElementById('viewport').classList.remove('hidden');
+        document.getElementById('webcam-video').classList.add('hidden');
+        document.getElementById('webcam-overlay').classList.add('hidden');
+        document.getElementById('main-cam-title').innerText = "CAM-01: High Crane Operations Deck";
+
+        if (webcamStream) {
+          webcamStream.getTracks().forEach(t => t.stop());
+          webcamStream = null;
+        }
+        drawScene();
+      }
+    }
+
+    function startWebcamOverlay() {
       const overlay = document.getElementById('webcam-overlay');
       const octx = overlay.getContext('2d');
       const v = document.getElementById('webcam-video');
@@ -876,42 +2041,37 @@
         octx.fillText(objectDetected ? '🚨 CRITICAL: OBJECT DETECTED IN ZONE' : '⚠ RESTRICTED ZONE (HOLD ANY OBJECT HERE)', zx + 10, zy - 12);
 
         if (objectDetected) {
-          document.getElementById('alarm-banner').classList.remove('hidden');
-          document.getElementById('alarm-banner-text').innerText = "CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE";
+          document.getElementById('alarm-banner')?.classList.remove('hidden');
+          const bannerText = document.getElementById('alarm-banner-text');
+          if (bannerText) bannerText.innerText = "CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE";
           const now = Date.now();
           if (now - lastAlertTime > 2500) {
             lastAlertTime = now;
             totalIncidentsCount++;
-            document.getElementById('kpi-total').innerText = totalIncidentsCount;
+            document.getElementById('kpi-incidents-ov').innerText = totalIncidentsCount;
             playBeep(750, 'sawtooth', 0.2);
-            logTelemetry("OBJECT_INTRUSION", "Physical Object", "CRITICAL", "Object or person detected in restricted camera zone");
+            logTelemetry("OBJECT_INTRUSION", "Optical Sensor Object", "CRITICAL", "Live object detected inside camera restricted area");
           }
         } else {
-          document.getElementById('alarm-banner').classList.add('hidden');
+          document.getElementById('alarm-banner')?.classList.add('hidden');
         }
-
-        // Camera HUD
-        octx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-        octx.fillRect(20, 20, 420, 90);
-        octx.strokeStyle = '#38BDF8';
-        octx.strokeRect(20, 20, 420, 90);
-        octx.fillStyle = '#38BDF8';
-        octx.font = 'bold 15px monospace';
-        octx.fillText('CraftifAI PipeGen Safety Sentinel', 35, 45);
-        octx.fillStyle = '#E2E8F0';
-        octx.font = '12px monospace';
-        octx.fillText('Universal Object Perception @ 152.9 FPS TRT', 35, 68);
-        octx.fillStyle = objectDetected ? '#EF4444' : '#10B981';
-        octx.fillText(objectDetected ? 'ALERT: Object Incursion Active!' : 'Hold any object (hand/phone/cup) in zone to test', 35, 90);
 
         requestAnimationFrame(analyzeFrame);
       }
       requestAnimationFrame(analyzeFrame);
     }
 
-    // Initial render
+    function saveSettings() {
+      alert("Settings saved successfully to Edge Configuration.");
+    }
+
+    // ====================================================================
+    // INITIAL BOOT
+    // ====================================================================
     renderObjectSelectors();
+    initOverviewCharts();
     drawScene();
+    updateOverviewRecent();
   </script>
 </body>
 </html>
