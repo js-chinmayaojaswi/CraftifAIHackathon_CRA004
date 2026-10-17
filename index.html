@@ -44,9 +44,9 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="font-bold text-base tracking-tight text-white">Workplace Safety Sentinel</span>
-            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">Universal Object Detection</span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-sky-950 text-sky-400 border border-sky-800">User-Controlled Interactive Demo</span>
           </div>
-          <p class="text-[11px] text-slate-400">Physical AI Edge Vision • Detects Any Personnel, Vehicle & Foreign Object</p>
+          <p class="text-[11px] text-slate-400">Physical AI Vision • Move Humans & Objects Manually to Test Zone Detection</p>
         </div>
       </div>
 
@@ -66,13 +66,14 @@
   <!-- Main Studio -->
   <main class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
 
-    <!-- Control Bar -->
+    <!-- Interactive Control Bar -->
     <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+      <!-- Mode Selection -->
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono mr-2">Input Mode:</span>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono mr-2">Control Mode:</span>
         <button onclick="setMode('sim')" id="btn-mode-sim" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-sky-500/10 border-sky-500 text-sky-400 flex items-center gap-2">
-          <i data-lucide="play" class="w-3.5 h-3.5"></i>
-          <span>Industrial Floor Simulation</span>
+          <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5"></i>
+          <span>Interactive Floor (Drag & Move)</span>
         </button>
         <button onclick="setMode('cam')" id="btn-mode-cam" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-950 border-slate-800 text-slate-400 hover:text-white flex items-center gap-2">
           <i data-lucide="camera" class="w-3.5 h-3.5"></i>
@@ -80,21 +81,21 @@
         </button>
       </div>
 
-      <!-- Object Spawners & Actions -->
+      <!-- Quick Action Buttons -->
       <div class="flex flex-wrap items-center gap-2">
-        <button onclick="spawnObject('box')" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-950/60 hover:bg-amber-900/70 text-amber-300 border border-amber-800/80 flex items-center gap-1.5 transition-all">
+        <button onclick="sendToZone('worker')" class="px-3 py-2 rounded-xl text-xs font-bold bg-red-950/60 hover:bg-red-900/70 text-red-300 border border-red-800/80 flex items-center gap-1.5 transition-all">
+          <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
+          <span>Move Worker to Danger Zone</span>
+        </button>
+        <button onclick="sendToZone('box')" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-950/60 hover:bg-amber-900/70 text-amber-300 border border-amber-800/80 flex items-center gap-1.5 transition-all">
           <i data-lucide="package" class="w-3.5 h-3.5"></i>
-          <span>+ Add Cargo / Box</span>
+          <span>Move Cargo to Danger Zone</span>
         </button>
-        <button onclick="spawnObject('forklift')" class="px-3 py-2 rounded-xl text-xs font-bold bg-indigo-950/60 hover:bg-indigo-900/70 text-indigo-300 border border-indigo-800/80 flex items-center gap-1.5 transition-all">
-          <i data-lucide="truck" class="w-3.5 h-3.5"></i>
-          <span>+ Add Forklift</span>
+        <button onclick="evacuateAll()" class="px-3 py-2 rounded-xl text-xs font-bold bg-emerald-950/60 hover:bg-emerald-900/70 text-emerald-300 border border-emerald-800/80 flex items-center gap-1.5 transition-all">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          <span>Clear Zone (Evacuate to Safe)</span>
         </button>
-        <button onclick="toggleSimulation()" id="btn-play-pause" class="px-4 py-2 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 transition-all flex items-center gap-1.5 shadow-md shadow-sky-500/20">
-          <i data-lucide="pause" id="play-pause-icon" class="w-4 h-4"></i>
-          <span id="play-pause-text">Pause Demo</span>
-        </button>
-        <button onclick="resetSimulation()" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition-all border border-slate-700 flex items-center gap-1.5">
+        <button onclick="resetPositions()" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition-all border border-slate-700 flex items-center gap-1.5">
           <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
           <span>Reset</span>
         </button>
@@ -115,9 +116,9 @@
               <span class="font-bold text-white" id="cam-title">CAM_SITE_NORTH (High Crane Zone)</span>
             </div>
             <div class="flex items-center gap-3">
-              <span class="text-emerald-400 font-bold" id="live-fps">152.9 FPS</span>
+              <span class="text-emerald-400 font-bold">152.9 FPS</span>
               <span class="text-slate-600">|</span>
-              <span class="text-slate-300 font-bold" id="live-latency">6.54 ms</span>
+              <span class="text-slate-300 font-bold">6.54 ms</span>
             </div>
           </div>
 
@@ -136,10 +137,10 @@
               <span id="alarm-banner-text">CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE</span>
             </div>
 
-            <!-- Drag Instruction Overlay -->
-            <div id="sim-instructions" class="absolute bottom-3 left-4 bg-slate-950/85 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] text-slate-300 pointer-events-none flex items-center gap-2 z-10">
-              <i data-lucide="hand" class="w-3.5 h-3.5 text-sky-400"></i>
-              <span><strong>Interactive:</strong> Click & drag ANY object or worker into the danger zone to test instant AI detection!</span>
+            <!-- Manual Control Instructions Overlay -->
+            <div id="sim-instructions" class="absolute bottom-3 left-4 bg-slate-950/90 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] text-slate-300 pointer-events-none flex items-center gap-2 z-10">
+              <i data-lucide="mouse-pointer" class="w-3.5 h-3.5 text-sky-400"></i>
+              <span><strong>Manual Control:</strong> Click and drag ANY human or object into the danger zone. Use <strong>WASD / Arrow Keys</strong> to walk selected worker!</span>
             </div>
           </div>
         </div>
@@ -148,13 +149,13 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
           <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
             <div class="text-[11px] text-slate-400">Inference Speed</div>
-            <div class="text-2xl font-bold text-sky-400 mt-1" id="kpi-fps">152.9 FPS</div>
+            <div class="text-2xl font-bold text-sky-400 mt-1">152.9 FPS</div>
             <div class="text-[10px] text-slate-500 mt-0.5">TensorRT FP16</div>
           </div>
           <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-            <div class="text-[11px] text-slate-400">Tracked Objects</div>
-            <div class="text-2xl font-bold text-slate-100 mt-1" id="kpi-workers">3 Objects</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Persons & Objects</div>
+            <div class="text-[11px] text-slate-400">Currently Selected</div>
+            <div class="text-lg font-bold text-sky-300 mt-1 truncate" id="kpi-selected">Worker-A</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">WASD / Arrow Move</div>
           </div>
           <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
             <div class="text-[11px] text-slate-400">Active Violations</div>
@@ -162,24 +163,24 @@
             <div class="text-[10px] text-slate-500 mt-0.5">Zone Incursions</div>
           </div>
           <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-            <div class="text-[11px] text-slate-400">Total Incidents</div>
+            <div class="text-[11px] text-slate-400">Total Logged Events</div>
             <div class="text-2xl font-bold text-emerald-400 mt-1" id="kpi-total">0</div>
             <div class="text-[10px] text-slate-500 mt-0.5">Dispatched to MQTT</div>
           </div>
         </div>
 
-        <!-- Worker PPE Controls -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <div class="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono mb-3 flex items-center justify-between">
+        <!-- Object Selection & Movement Bar -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div class="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono flex items-center justify-between">
             <span class="flex items-center gap-1.5">
-              <i data-lucide="sliders" class="w-4 h-4 text-sky-400"></i>
-              <span>Worker State & PPE Compliance Controls</span>
+              <i data-lucide="crosshair" class="w-4 h-4 text-sky-400"></i>
+              <span>Select Entity to Control or Toggle Equipment</span>
             </span>
-            <span class="text-[10px] text-slate-400 font-normal">Toggle equipment to test AI PPE verification</span>
+            <span class="text-[10px] text-slate-400 font-normal">Click buttons below or click entity on screen</span>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="worker-controls">
-            <!-- Populated dynamically -->
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3" id="object-selector-cards">
+            <!-- Dynamically populated -->
           </div>
         </div>
       </div>
@@ -217,31 +218,31 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
         <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center mb-3">
-          <i data-lucide="eye" class="w-5 h-5"></i>
+          <i data-lucide="user-check" class="w-5 h-5"></i>
         </div>
-        <h4 class="font-bold text-base text-white">Universal Detection in Restricted Zones</h4>
+        <h4 class="font-bold text-base text-white">100% User-Driven Motion</h4>
         <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-          The edge AI perception engine detects personnel, unauthorized vehicles, dropped cargo, crates, and foreign objects inside the restricted hazard boundary.
+          No automated looping. Humans and objects stay stationary until you drag them or guide them with mouse clicks and WASD keys.
         </p>
       </div>
 
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
         <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3">
-          <i data-lucide="cpu" class="w-5 h-5"></i>
+          <i data-lucide="box" class="w-5 h-5"></i>
         </div>
-        <h4 class="font-bold text-base text-white">Spatial Geofencing & Intersections</h4>
+        <h4 class="font-bold text-base text-white">Universal Object Detection</h4>
         <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-          Vectorized point-in-polygon tests and bounding-box overlap algorithms compute object encroachment in real-time with sub-millisecond execution overhead.
+          Drop any object (cargo box, forklift, worker, or tool) into the restricted crane zone to test instantaneous intrusion detection.
         </p>
       </div>
 
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
         <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3">
-          <i data-lucide="send" class="w-5 h-5"></i>
+          <i data-lucide="zap" class="w-5 h-5"></i>
         </div>
-        <h4 class="font-bold text-base text-white">Automated Safety Action</h4>
+        <h4 class="font-bold text-base text-white">Instant Response Trigger</h4>
         <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-          Triggers immediate hardware actions (emergency machine shutoff, audible sirens, visual beacons) and logs incident metadata to audit logs.
+          Zero-delay evaluation updates bounding boxes from Green to flashing Red and dispatches real-time MQTT alerts.
         </p>
       </div>
     </div>
@@ -286,10 +287,9 @@
       lucide.createIcons();
     }
 
-    // Canvas & State Setup
+    // Canvas Setup
     const canvas = document.getElementById('viewport');
     const ctx = canvas.getContext('2d');
-    let isRunning = true;
     let mode = 'sim';
 
     // Restricted Hazard Zone Polygon
@@ -300,57 +300,62 @@
       { x: 500, y: 640 }
     ];
 
-    // Objects in Scene (Workers + Vehicles + Cargo Objects)
+    // Objects in Scene (No looping velocities; purely stationary until moved by user!)
     let sceneObjects = [
-      { id: 101, type: "person", name: "Worker-A", x: 250, y: 400, w: 60, h: 140, vx: 2.2, vy: 0.4, helmet: true, vest: true, dragging: false },
-      { id: 102, type: "person", name: "Worker-B", x: 540, y: 340, w: 60, h: 140, vx: 1.8, vy: 0.6, helmet: false, vest: true, dragging: false },
-      { id: 103, type: "person", name: "Worker-C", x: 380, y: 530, w: 60, h: 140, vx: 1.2, vy: -0.5, helmet: true, vest: false, dragging: false },
-      { id: 201, type: "vehicle", name: "Forklift-01", x: 200, y: 260, w: 100, h: 80, vx: 1.5, vy: 0.2, dragging: false },
-      { id: 301, type: "cargo", name: "Cargo Pallet", x: 320, y: 350, w: 70, h: 60, vx: 0.0, vy: 0.0, dragging: false }
+      { id: 101, type: "person", name: "Worker-A", x: 220, y: 400, w: 60, h: 140, helmet: true, vest: true, targetX: null, targetY: null, dragging: false },
+      { id: 102, type: "person", name: "Worker-B", x: 340, y: 280, w: 60, h: 140, helmet: false, vest: true, targetX: null, targetY: null, dragging: false },
+      { id: 201, type: "vehicle", name: "Forklift-01", x: 180, y: 560, w: 100, h: 80, targetX: null, targetY: null, dragging: false },
+      { id: 301, type: "cargo", name: "Cargo Pallet", x: 350, y: 480, w: 70, h: 60, targetX: null, targetY: null, dragging: false }
     ];
 
+    let selectedObject = sceneObjects[0]; // Default select Worker-A
     let totalIncidentsCount = 0;
     let activeViolationsCount = 0;
     let lastAlertTime = 0;
 
-    // Spawners
-    function spawnObject(type) {
-      const id = Math.floor(Math.random() * 800) + 200;
-      if (type === 'box') {
-        sceneObjects.push({
-          id: id,
-          type: "cargo",
-          name: "Object Box #" + id,
-          x: 450 + Math.random() * 200,
-          y: 280 + Math.random() * 200,
-          w: 65,
-          h: 55,
-          vx: (Math.random() - 0.5) * 1.5,
-          vy: (Math.random() - 0.5) * 1.5,
-          dragging: false
-        });
-        logTelemetry("OBJECT_SPAWNED", "Cargo Box #" + id, "INFO", "New cargo placed on factory floor");
-      } else if (type === 'forklift') {
-        sceneObjects.push({
-          id: id,
-          type: "vehicle",
-          name: "Forklift #" + id,
-          x: 200 + Math.random() * 150,
-          y: 350 + Math.random() * 150,
-          w: 100,
-          h: 80,
-          vx: 1.8,
-          vy: 0.4,
-          dragging: false
-        });
-        logTelemetry("VEHICLE_SPAWNED", "Forklift #" + id, "INFO", "Industrial vehicle entered scene");
-      }
-      updateTrackedCount();
-      if (!isRunning) renderSim();
+    function selectObject(obj) {
+      selectedObject = obj;
+      document.getElementById('kpi-selected').innerText = obj.name;
+      renderObjectSelectors();
+      drawScene();
     }
 
-    function updateTrackedCount() {
-      document.getElementById('kpi-workers').innerText = sceneObjects.length + " Objects";
+    // Quick Actions
+    function sendToZone(type) {
+      if (type === 'worker') {
+        const worker = sceneObjects.find(o => o.type === "person");
+        if (worker) {
+          worker.x = 650;
+          worker.y = 350;
+          worker.targetX = null;
+          worker.targetY = null;
+          selectObject(worker);
+        }
+      } else if (type === 'box') {
+        const cargo = sceneObjects.find(o => o.type === "cargo") || sceneObjects[3];
+        if (cargo) {
+          cargo.x = 750;
+          cargo.y = 480;
+          cargo.targetX = null;
+          cargo.targetY = null;
+          selectObject(cargo);
+        }
+      }
+      drawScene();
+    }
+
+    function evacuateAll() {
+      sceneObjects[0].x = 220; sceneObjects[0].y = 400;
+      sceneObjects[1].x = 340; sceneObjects[1].y = 280;
+      sceneObjects[2].x = 180; sceneObjects[2].y = 560;
+      sceneObjects[3].x = 350; sceneObjects[3].y = 480;
+      sceneObjects.forEach(o => { o.targetX = null; o.targetY = null; });
+      logTelemetry("ZONE_EVACUATED", "All Entities", "SAFE", "All personnel and objects cleared to safe area");
+      drawScene();
+    }
+
+    function resetPositions() {
+      evacuateAll();
     }
 
     // Geometry Helpers
@@ -367,7 +372,6 @@
     }
 
     function doesBoxIntersectZone(x, y, w, h, poly) {
-      // Check 4 corners plus center
       const pts = [
         { x: x - w/2, y: y - h/2 },
         { x: x + w/2, y: y - h/2 },
@@ -408,8 +412,8 @@
       document.getElementById('incident-feed').innerHTML = '';
     }
 
-    // Simulation Render Loop
-    function renderSim() {
+    // Main Draw Function (Updates smooth animation for user walking or dragging)
+    function drawScene() {
       if (mode !== 'sim') return;
 
       const w = canvas.width;
@@ -428,6 +432,11 @@
       for (let y = 0; y < h; y += 60) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
       }
+
+      // Safe Zone Marker
+      ctx.fillStyle = '#064E3B';
+      ctx.font = 'bold 16px monospace';
+      ctx.fillText('AUTHORIZED WORKER ZONE (SAFE AREA)', 60, 160);
 
       // 2. Heavy Machinery Area
       ctx.fillStyle = '#222336';
@@ -454,23 +463,35 @@
       ctx.font = 'bold 18px monospace';
       ctx.fillText('⚠ RESTRICTED HAZARD ZONE: CRANE OPERATIONS', hazardZone[0].x + 20, hazardZone[0].y - 12);
 
-      // 4. Update and Draw Every Object (Workers, Forklifts, Cargo/Boxes)
+      // 4. Update smooth interpolation if moving towards user click target
+      let needsNextFrame = false;
+      sceneObjects.forEach(obj => {
+        if (obj.targetX !== null && obj.targetY !== null && !obj.dragging) {
+          const dx = obj.targetX - obj.x;
+          const dy = obj.targetY - obj.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > 3) {
+            obj.x += (dx / dist) * 4.5;
+            obj.y += (dy / dist) * 4.5;
+            needsNextFrame = true;
+          } else {
+            obj.x = obj.targetX;
+            obj.y = obj.targetY;
+            obj.targetX = null;
+            obj.targetY = null;
+          }
+        }
+      });
+
+      // 5. Draw All Objects & Check Incursion
       let currentViolations = 0;
       let lastIntruderDesc = "";
 
       sceneObjects.forEach(obj => {
-        if (isRunning && !obj.dragging) {
-          obj.x += obj.vx;
-          obj.y += obj.vy;
-          if (obj.x < 100 || obj.x > w - 100) obj.vx *= -1;
-          if (obj.y < 220 || obj.y > h - 100) obj.vy *= -1;
-        }
-
         const bw = obj.w, bh = obj.h;
         const x1 = obj.x - bw/2, y1 = obj.y - bh/2;
         const x2 = obj.x + bw/2, y2 = obj.y + bh/2;
 
-        // Check if ANY part of this object is inside the hazard zone!
         const inHazard = doesBoxIntersectZone(obj.x, obj.y, bw, bh, hazardZone);
 
         let statusText = "SAFE: AUTHORIZED";
@@ -492,7 +513,7 @@
             statusColor = "#F59E0B";
           }
 
-          // Draw Person
+          // Person Body
           ctx.fillStyle = '#64748B';
           ctx.fillRect(x1 + 10, y1 + 35, bw - 20, bh - 35);
           ctx.beginPath();
@@ -519,7 +540,6 @@
             lastIntruderDesc = `${obj.name} (Unauthorized Vehicle in Zone)`;
           }
 
-          // Draw Forklift
           ctx.fillStyle = '#F59E0B';
           ctx.fillRect(x1, y1 + 20, bw, bh - 35);
           ctx.fillStyle = '#1E293B';
@@ -538,7 +558,6 @@
             lastIntruderDesc = `${obj.name} (Foreign Object / Cargo In Zone)`;
           }
 
-          // Draw Wooden Crate / Cargo
           ctx.fillStyle = '#B45309';
           ctx.fillRect(x1, y1, bw, bh);
           ctx.strokeStyle = '#78350F';
@@ -550,7 +569,16 @@
           ctx.stroke();
         }
 
-        // AI Perception Bounding Box
+        // Selected Entity Halo Ring
+        if (selectedObject && selectedObject.id === obj.id) {
+          ctx.strokeStyle = '#38BDF8';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 4]);
+          ctx.strokeRect(x1 - 8, y1 - 8, bw + 16, bh + 16);
+          ctx.setLineDash([]);
+        }
+
+        // AI Bounding Box
         ctx.strokeStyle = statusColor;
         ctx.lineWidth = 2.5;
         ctx.strokeRect(x1, y1, bw, bh);
@@ -563,7 +591,7 @@
         ctx.font = 'bold 12px monospace';
         ctx.fillText(`${obj.name}: ${statusText}`, x1 + 6, y1 - 8);
 
-        // Center Coordinate Anchor
+        // Coordinate Anchor
         ctx.beginPath();
         ctx.arc(obj.x, obj.y, 4, 0, Math.PI * 2);
         ctx.fillStyle = statusColor;
@@ -585,7 +613,7 @@
           totalIncidentsCount++;
           document.getElementById('kpi-total').innerText = totalIncidentsCount;
           playBeep(750, 'sawtooth', 0.22);
-          logTelemetry("ZONE_BREACH", lastIntruderDesc || "Foreign Object", "CRITICAL", "Object detected trespassing restricted heavy machinery zone");
+          logTelemetry("ZONE_BREACH", lastIntruderDesc || "Foreign Object", "CRITICAL", "Object or personnel detected inside restricted heavy machinery zone");
         }
       } else {
         alarmBanner.classList.add('hidden');
@@ -593,10 +621,10 @@
 
       // Telemetry HUD overlay
       ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-      ctx.fillRect(15, 15, 380, 85);
+      ctx.fillRect(15, 15, 410, 85);
       ctx.strokeStyle = '#334155';
       ctx.lineWidth = 1;
-      ctx.strokeRect(15, 15, 380, 85);
+      ctx.strokeRect(15, 15, 410, 85);
 
       ctx.fillStyle = '#38BDF8';
       ctx.font = 'bold 15px monospace';
@@ -604,17 +632,20 @@
 
       ctx.fillStyle = '#E2E8F0';
       ctx.font = '12px monospace';
-      ctx.fillText(`Pipeline Speed: 152.9 FPS | Tracked Objects: ${sceneObjects.length}`, 30, 62);
+      ctx.fillText(`Pipeline Speed: 152.9 FPS | Active Entity: ${selectedObject ? selectedObject.name : 'None'}`, 30, 62);
       ctx.fillStyle = activeViolationsCount > 0 ? '#EF4444' : '#10B981';
-      ctx.fillText(`Restricted Incursions: ${activeViolationsCount} | Audio Siren: ${audioEnabled ? 'ON' : 'OFF'}`, 30, 84);
+      ctx.fillText(`Restricted Incursions: ${activeViolationsCount} | Drag or Click to Move`, 30, 84);
 
-      if (isRunning) {
-        requestAnimationFrame(renderSim);
+      if (needsNextFrame) {
+        requestAnimationFrame(drawScene);
       }
     }
 
-    // Drag-and-drop any object
-    let selectedObject = null;
+    // Direct Drag & Drop or Click-to-Move
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+
     canvas.addEventListener('mousedown', (e) => {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -622,64 +653,123 @@
       const mouseX = (e.clientX - rect.left) * scaleX;
       const mouseY = (e.clientY - rect.top) * scaleY;
 
+      dragStartX = mouseX;
+      dragStartY = mouseY;
+
+      // Check if clicking on an entity
+      let clickedObject = null;
       for (let obj of sceneObjects) {
         const dist = Math.hypot(obj.x - mouseX, obj.y - mouseY);
         if (dist < Math.max(obj.w, obj.h)) {
-          selectedObject = obj;
-          obj.dragging = true;
+          clickedObject = obj;
           break;
         }
+      }
+
+      if (clickedObject) {
+        selectObject(clickedObject);
+        clickedObject.dragging = true;
+        isDragging = true;
+      } else if (selectedObject) {
+        // Click-to-move destination waypoint
+        selectedObject.targetX = Math.max(80, Math.min(canvas.width - 80, mouseX));
+        selectedObject.targetY = Math.max(180, Math.min(canvas.height - 80, mouseY));
+        requestAnimationFrame(drawScene);
       }
     });
 
     window.addEventListener('mousemove', (e) => {
-      if (selectedObject) {
+      if (isDragging && selectedObject && selectedObject.dragging) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
         selectedObject.x = Math.max(80, Math.min(canvas.width - 80, (e.clientX - rect.left) * scaleX));
         selectedObject.y = Math.max(180, Math.min(canvas.height - 80, (e.clientY - rect.top) * scaleY));
-        if (!isRunning) renderSim();
+        selectedObject.targetX = null;
+        selectedObject.targetY = null;
+        drawScene();
       }
     });
 
     window.addEventListener('mouseup', () => {
       if (selectedObject) {
         selectedObject.dragging = false;
-        selectedObject = null;
+      }
+      isDragging = false;
+    });
+
+    // Keyboard (Arrow Keys & WASD) Navigation
+    window.addEventListener('keydown', (e) => {
+      if (!selectedObject) return;
+      const step = 25;
+      let moved = false;
+
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        selectedObject.y = Math.max(180, selectedObject.y - step);
+        moved = true;
+      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+        selectedObject.y = Math.min(canvas.height - 80, selectedObject.y + step);
+        moved = true;
+      } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        selectedObject.x = Math.max(80, selectedObject.x - step);
+        moved = true;
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        selectedObject.x = Math.min(canvas.width - 80, selectedObject.x + step);
+        moved = true;
+      }
+
+      if (moved) {
+        e.preventDefault();
+        selectedObject.targetX = null;
+        selectedObject.targetY = null;
+        drawScene();
       }
     });
 
-    // Control Handlers
-    function toggleSimulation() {
-      isRunning = !isRunning;
-      const btnText = document.getElementById('play-pause-text');
-      const icon = document.getElementById('play-pause-icon');
-      if (isRunning) {
-        btnText.innerText = 'Pause Demo';
-        icon.setAttribute('data-lucide', 'pause');
-        renderSim();
-      } else {
-        btnText.innerText = 'Resume Demo';
-        icon.setAttribute('data-lucide', 'play');
+    // Object Selector Bar
+    function renderObjectSelectors() {
+      const container = document.getElementById('object-selector-cards');
+      container.innerHTML = sceneObjects.map(obj => {
+        const isSel = selectedObject && selectedObject.id === obj.id;
+        const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+        return `
+          <div onclick="selectObject(sceneObjects.find(o => o.id === ${obj.id}))" 
+               class="cursor-pointer p-3 rounded-xl border transition-all ${isSel ? 'bg-sky-950/60 border-sky-500 shadow-md shadow-sky-500/20' : 'bg-slate-950 border-slate-800 hover:border-slate-700'}">
+            <div class="flex items-center justify-between font-mono text-xs font-bold mb-1.5">
+              <span class="${isSel ? 'text-sky-300' : 'text-slate-200'}">${obj.name}</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded ${inHazard ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+                ${inHazard ? 'IN ZONE' : 'SAFE'}
+              </span>
+            </div>
+            ${obj.type === 'person' ? `
+              <div class="flex gap-1.5 mt-2" onclick="event.stopPropagation()">
+                <button onclick="toggleWorkerPPE(${obj.id}, 'helmet')" class="flex-1 py-1 rounded text-[10px] font-mono font-bold border ${obj.helmet ? 'bg-amber-950/70 border-amber-600 text-amber-300' : 'bg-slate-900 border-slate-800 text-slate-500'}">
+                  Hardhat: ${obj.helmet ? 'ON' : 'OFF'}
+                </button>
+                <button onclick="toggleWorkerPPE(${obj.id}, 'vest')" class="flex-1 py-1 rounded text-[10px] font-mono font-bold border ${obj.vest ? 'bg-emerald-950/70 border-emerald-600 text-emerald-300' : 'bg-slate-900 border-slate-800 text-slate-500'}">
+                  Vest: ${obj.vest ? 'ON' : 'OFF'}
+                </button>
+              </div>
+            ` : `
+              <div class="text-[10px] text-slate-400 font-mono mt-2">
+                Click & Drag or WASD to navigate
+              </div>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleWorkerPPE(id, attr) {
+      const obj = sceneObjects.find(o => o.id === id);
+      if (obj) {
+        obj[attr] = !obj[attr];
+        renderObjectSelectors();
+        drawScene();
       }
-      lucide.createIcons();
     }
 
-    function resetSimulation() {
-      sceneObjects = [
-        { id: 101, type: "person", name: "Worker-A", x: 250, y: 400, w: 60, h: 140, vx: 2.2, vy: 0.4, helmet: true, vest: true, dragging: false },
-        { id: 102, type: "person", name: "Worker-B", x: 540, y: 340, w: 60, h: 140, vx: 1.8, vy: 0.6, helmet: false, vest: true, dragging: false },
-        { id: 103, type: "person", name: "Worker-C", x: 380, y: 530, w: 60, h: 140, vx: 1.2, vy: -0.5, helmet: true, vest: false, dragging: false },
-        { id: 201, type: "vehicle", name: "Forklift-01", x: 200, y: 260, w: 100, h: 80, vx: 1.5, vy: 0.2, dragging: false },
-        { id: 301, type: "cargo", name: "Cargo Pallet", x: 320, y: 350, w: 70, h: 60, vx: 0.0, vy: 0.0, dragging: false }
-      ];
-      updateTrackedCount();
-      renderPPEControls();
-      if (!isRunning) renderSim();
-    }
-
-    // Camera Mode with Real Object/Motion Detection
+    // Camera Mode Support
     let webcamStream = null;
     let prevCamFrame = null;
 
@@ -705,11 +795,7 @@
           webcamStream = null;
         }
         document.getElementById('cam-title').innerText = "CAM_SITE_NORTH (High Crane Zone)";
-        if (!isRunning) {
-          isRunning = true;
-          document.getElementById('play-pause-text').innerText = 'Pause Demo';
-        }
-        renderSim();
+        drawScene();
       } else {
         btnCam.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-sky-500/10 border-sky-500 text-sky-400 flex items-center gap-2";
         btnSim.className = "px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-950 border-slate-800 text-slate-400 hover:text-white flex items-center gap-2";
@@ -745,7 +831,6 @@
         if (mode !== 'cam') return;
         octx.clearRect(0, 0, overlay.width, overlay.height);
 
-        // Motion/Object presence detection inside zone
         let objectDetected = false;
         try {
           if (v.readyState >= 2) {
@@ -791,7 +876,6 @@
         octx.fillText(objectDetected ? '🚨 CRITICAL: OBJECT DETECTED IN ZONE' : '⚠ RESTRICTED ZONE (HOLD ANY OBJECT HERE)', zx + 10, zy - 12);
 
         if (objectDetected) {
-          // Trigger alarm banner
           document.getElementById('alarm-banner').classList.remove('hidden');
           document.getElementById('alarm-banner-text').innerText = "CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE";
           const now = Date.now();
@@ -806,7 +890,7 @@
           document.getElementById('alarm-banner').classList.add('hidden');
         }
 
-        // HUD overlay
+        // Camera HUD
         octx.fillStyle = 'rgba(15, 23, 42, 0.88)';
         octx.fillRect(20, 20, 420, 90);
         octx.strokeStyle = '#38BDF8';
@@ -825,39 +909,9 @@
       requestAnimationFrame(analyzeFrame);
     }
 
-    // PPE Controls
-    function renderPPEControls() {
-      const container = document.getElementById('worker-controls');
-      const workersOnly = sceneObjects.filter(o => o.type === "person");
-      container.innerHTML = workersOnly.map((w, idx) => `
-        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
-          <div class="font-bold text-slate-200 font-mono flex items-center justify-between">
-            <span>${w.name} (ID:${w.id})</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Worker</span>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="toggleWorkerPPE(${idx}, 'helmet')" class="flex-1 py-1.5 rounded-lg border font-mono font-bold text-[10px] transition-all ${w.helmet ? 'bg-amber-950/60 border-amber-600 text-amber-300' : 'bg-slate-900 border-slate-700 text-slate-500'}">
-              Hardhat: ${w.helmet ? 'ON' : 'OFF'}
-            </button>
-            <button onclick="toggleWorkerPPE(${idx}, 'vest')" class="flex-1 py-1.5 rounded-lg border font-mono font-bold text-[10px] transition-all ${w.vest ? 'bg-emerald-950/60 border-emerald-600 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-500'}">
-              Vest: ${w.vest ? 'ON' : 'OFF'}
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function toggleWorkerPPE(index, attr) {
-      const workersOnly = sceneObjects.filter(o => o.type === "person");
-      workersOnly[index][attr] = !workersOnly[index][attr];
-      renderPPEControls();
-      if (!isRunning) renderSim();
-    }
-
-    // Start
-    renderPPEControls();
-    updateTrackedCount();
-    renderSim();
+    // Initial render
+    renderObjectSelectors();
+    drawScene();
   </script>
 </body>
 </html>
