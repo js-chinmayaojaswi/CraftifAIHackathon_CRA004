@@ -27,8 +27,9 @@ class UniversalRestrictedZoneSentinel:
         self.model = YOLO("yolov8n.pt")
         print("[SUCCESS] Loaded YOLOv8 Edge Perception Model (All Object Classes Enabled).")
 
-        # Restricted Hazard Polygon (Heavy Crane / Machinery Zone)
-        self.hazard_zone = np.array([[450, 200], [1150, 200], [1150, 650], [450, 650]], np.int32)
+        # Restricted Hazard Polygon (Heavy Crane / Machinery Zone) aligned with camera coordinates
+        self.hazard_zone = np.array([[600, 250], [1150, 250], [1150, 650], [600, 650]], np.int32)
+        self.target_states = {}
 
         # Setup MQTT Client
         self.mqtt_client = None
@@ -52,20 +53,65 @@ class UniversalRestrictedZoneSentinel:
 
     def is_inside_zone(self, point, polygon):
         """Returns True if point (x, y) is inside the polygon."""
+        if point is None or len(point) < 2 or np.isnan(point[0]) or np.isnan(point[1]):
+            return False
         return cv2.pointPolygonTest(polygon, (float(point[0]), float(point[1])), False) >= 0
 
+    def evaluate_bbox_zone(self, bbox, polygon):
+        """
+        Accurately evaluate bounding box position relative to restricted hazard zone.
+        Uses exact AABB intersection:
+            x_min < zone_x_max and x_max > zone_x_min and y_min < zone_y_max and y_max > zone_y_min
+        Returns:
+            state (str): 'SAFE', 'BREACH', or 'UNKNOWN'
+            dist_px (float or None): Euclidean clearance distance to zone boundaries
+        """
+        if bbox is None or len(bbox) != 4:
+            return "UNKNOWN", None
+        try:
+            x1, y1, x2, y2 = [float(v) for v in bbox]
+        except (ValueError, TypeError):
+            return "UNKNOWN", None
+
+        if np.isnan(x1) or np.isnan(y1) or np.isnan(x2) or np.isnan(y2) or x2 <= x1 or y2 <= y1:
+            return "UNKNOWN", None
+
+        zx_min = float(np.min(polygon[:, 0]))
+        zx_max = float(np.max(polygon[:, 0]))
+        zy_min = float(np.min(polygon[:, 1]))
+        zy_max = float(np.max(polygon[:, 1]))
+
+        # Geometric AABB intersection check
+        intersects = (x1 < zx_max and x2 > zx_min and y1 < zy_max and y2 > zy_min)
+
+        # Distance calculation
+        dx = max(0.0, zx_min - x2, x1 - zx_max)
+        dy = max(0.0, zy_min - y2, y1 - zy_max)
+        dist_px = float(np.hypot(dx, dy))
+
+        state = "BREACH" if intersects else "SAFE"
+        return state, dist_px
+
     def does_bbox_intersect_zone(self, bbox, polygon):
-        """Checks if any corner or center of bbox is inside the polygon."""
-        x1, y1, x2, y2 = bbox
-        pts = [
-            (x1, y1), (x2, y1), (x1, y2), (x2, y2),
-            ((x1 + x2) // 2, (y1 + y2) // 2),
-            ((x1 + x2) // 2, y2)
-        ]
-        for pt in pts:
-            if self.is_inside_zone(pt, polygon):
-                return True
-        return False
+        state, _ = self.evaluate_bbox_zone(bbox, polygon)
+        return state == "BREACH"
+
+    def update_target_state(self, target_id, raw_state, min_confirm_frames=2):
+        """Anti-flicker consecutive-frame confirmation for safety status."""
+        if raw_state == "UNKNOWN":
+            return "UNKNOWN"
+        t_info = self.target_states.setdefault(target_id, {"state": "SAFE", "breach_frames": 0, "clear_frames": 0})
+        if raw_state == "BREACH":
+            t_info["breach_frames"] += 1
+            t_info["clear_frames"] = 0
+            if t_info["breach_frames"] >= min_confirm_frames:
+                t_info["state"] = "BREACH"
+        else:
+            t_info["clear_frames"] += 1
+            t_info["breach_frames"] = 0
+            if t_info["clear_frames"] >= min_confirm_frames:
+                t_info["state"] = "SAFE"
+        return t_info["state"]
 
     def dispatch_alert(self, event_type, object_type, object_id, bbox, violation_details, debounce_seconds=2.5):
         """Publish real-time telemetry over MQTT and write to JSON incident log with cooldown debouncing."""
@@ -169,18 +215,23 @@ class UniversalRestrictedZoneSentinel:
             # Process all detected objects
             for idx, (x1, y1, x2, y2, label, conf) in enumerate(detections):
                 bbox = (x1, y1, x2, y2)
-                in_hazard = self.does_bbox_intersect_zone(bbox, self.hazard_zone)
+                raw_state, dist_px = self.evaluate_bbox_zone(bbox, self.hazard_zone)
+                target_key = f"{label}_{idx+1}"
+                safety_state = self.update_target_state(target_key, raw_state)
 
-                if in_hazard:
+                if safety_state == "BREACH":
                     frame_violations += 1
                     total_violations += 1
-                    status_text = f"CRITICAL: {label.upper()} IN ZONE"
+                    status_text = f"BREACH: {label.upper()} IN ZONE"
                     box_color = (0, 0, 255) # Red
                     violations = [f"RESTRICTED_ZONE_INTRUSION: {label}"]
                     self.dispatch_alert("ZONE_INTRUSION", label, idx + 1, bbox, violations)
-                else:
-                    status_text = f"SAFE: {label.upper()}"
+                elif safety_state == "SAFE":
+                    status_text = f"SAFE: {label.upper()} ({dist_px:.0f}px)" if dist_px is not None else f"SAFE: {label.upper()}"
                     box_color = (0, 255, 0) # Green
+                else:
+                    status_text = f"UNKNOWN: {label.upper()}"
+                    box_color = (128, 128, 128) # Gray
 
                 # Draw bounding box and alert tag
                 cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)

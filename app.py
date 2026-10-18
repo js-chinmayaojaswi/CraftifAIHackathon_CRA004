@@ -15,7 +15,8 @@ class PipelineState:
         self.model = YOLO("yolov8n.pt")
         self.source_type = "video" # 'video' or 'webcam'
         self.video_path = "data/workplace_sample.mp4"
-        self.hazard_zone = np.array([[450, 200], [1150, 200], [1150, 650], [450, 650]], np.int32)
+        self.hazard_zone = np.array([[600, 250], [1150, 250], [1150, 650], [600, 650]], np.int32)
+        self.target_states = {}
         self.fps = 0.0
         self.active_workers = 0
         self.active_violations = 0
@@ -38,7 +39,57 @@ class PipelineState:
             self.cap = cv2.VideoCapture(self.video_path)
 
     def is_inside_zone(self, point, polygon):
+        if point is None or len(point) < 2 or np.isnan(point[0]) or np.isnan(point[1]):
+            return False
         return cv2.pointPolygonTest(polygon, (float(point[0]), float(point[1])), False) >= 0
+
+    def evaluate_bbox_zone(self, bbox, polygon):
+        """
+        Calculates position relative to restricted zone using exact AABB overlap.
+        Returns:
+            state (str): 'SAFE', 'BREACH', or 'UNKNOWN'
+            dist_px (float or None): Euclidean distance to zone
+        """
+        if bbox is None or len(bbox) != 4:
+            return "UNKNOWN", None
+        try:
+            x1, y1, x2, y2 = [float(v) for v in bbox]
+        except (ValueError, TypeError):
+            return "UNKNOWN", None
+
+        if np.isnan(x1) or np.isnan(y1) or np.isnan(x2) or np.isnan(y2) or x2 <= x1 or y2 <= y1:
+            return "UNKNOWN", None
+
+        zx_min = float(np.min(polygon[:, 0]))
+        zx_max = float(np.max(polygon[:, 0]))
+        zy_min = float(np.min(polygon[:, 1]))
+        zy_max = float(np.max(polygon[:, 1]))
+
+        # Exact intersection: x_min < zone_x_max && x_max > zone_x_min && y_min < zone_y_max && y_max > zone_y_min
+        intersects = (x1 < zx_max and x2 > zx_min and y1 < zy_max and y2 > zy_min)
+
+        dx = max(0.0, zx_min - x2, x1 - zx_max)
+        dy = max(0.0, zy_min - y2, y1 - zy_max)
+        dist_px = float(np.hypot(dx, dy))
+
+        state = "BREACH" if intersects else "SAFE"
+        return state, dist_px
+
+    def update_target_state(self, target_id, raw_state, min_confirm_frames=2):
+        if raw_state == "UNKNOWN":
+            return "UNKNOWN"
+        t_info = self.target_states.setdefault(target_id, {"state": "SAFE", "breach_frames": 0, "clear_frames": 0})
+        if raw_state == "BREACH":
+            t_info["breach_frames"] += 1
+            t_info["clear_frames"] = 0
+            if t_info["breach_frames"] >= min_confirm_frames:
+                t_info["state"] = "BREACH"
+        else:
+            t_info["clear_frames"] += 1
+            t_info["breach_frames"] = 0
+            if t_info["clear_frames"] >= min_confirm_frames:
+                t_info["state"] = "SAFE"
+        return t_info["state"]
 
     def detect_workers(self, frame):
         boxes = []
@@ -88,11 +139,14 @@ def generate_frames():
                     (state.hazard_zone[0][0] + 10, state.hazard_zone[0][1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.65, zone_color, 2)
 
-        violations_count = 0
+        zone_breaches_count = 0
         for idx, (x1, y1, x2, y2, label, conf) in enumerate(detections):
-            foot_pt = ((x1 + x2) // 2, y2)
-            in_hazard = state.is_inside_zone(foot_pt, state.hazard_zone)
+            bbox = (x1, y1, x2, y2)
+            raw_state, dist_px = state.evaluate_bbox_zone(bbox, state.hazard_zone)
+            target_key = f"worker_{idx+1}"
+            safety_state = state.update_target_state(target_key, raw_state)
 
+            foot_pt = ((x1 + x2) // 2, y2)
             missing_ppe = []
             if foot_pt[0] > 620:
                 missing_ppe.append("MISSING_HARDHAT")
@@ -100,8 +154,8 @@ def generate_frames():
                 missing_ppe.append("MISSING_SAFETY_VEST")
 
             now_ts = time.time()
-            if in_hazard:
-                violations_count += 1
+            if safety_state == "BREACH":
+                zone_breaches_count += 1
                 status_text = "CRITICAL: ZONE INTRUSION"
                 box_color = (0, 0, 255)
                 key = f"hazard_{idx+1}"
@@ -118,38 +172,42 @@ def generate_frames():
                     state.recent_incidents.insert(0, event_data)
                     if len(state.recent_incidents) > 20:
                         state.recent_incidents.pop()
-            elif len(missing_ppe) > 0:
-                violations_count += 1
-                status_text = f"WARNING: {missing_ppe[0]}"
-                box_color = (0, 140, 255)
-                key = f"ppe_{idx+1}"
-                if now_ts - state.alert_cooldowns.get(key, 0) > 3.0:
-                    state.alert_cooldowns[key] = now_ts
-                    state.total_incidents += 1
-                    event_data = {
-                        "time": datetime.now().strftime("%H:%M:%S"),
-                        "type": "PPE_VIOLATION",
-                        "worker": f"Worker #{idx+1}",
-                        "severity": "WARNING",
-                        "details": f"Missing compliance: {', '.join(missing_ppe)}"
-                    }
-                    state.recent_incidents.insert(0, event_data)
-                    if len(state.recent_incidents) > 20:
-                        state.recent_incidents.pop()
+            elif safety_state == "SAFE":
+                if len(missing_ppe) > 0:
+                    status_text = f"SAFE (WARNING: {missing_ppe[0]})"
+                    box_color = (0, 140, 255)
+                    key = f"ppe_{idx+1}"
+                    if now_ts - state.alert_cooldowns.get(key, 0) > 3.0:
+                        state.alert_cooldowns[key] = now_ts
+                        state.total_incidents += 1
+                        event_data = {
+                            "time": datetime.now().strftime("%H:%M:%S"),
+                            "type": "PPE_VIOLATION",
+                            "worker": f"Worker #{idx+1}",
+                            "severity": "WARNING",
+                            "details": f"Missing compliance: {', '.join(missing_ppe)}"
+                        }
+                        state.recent_incidents.insert(0, event_data)
+                        if len(state.recent_incidents) > 20:
+                            state.recent_incidents.pop()
+                else:
+                    dist_text = f"{dist_px:.0f}px" if dist_px is not None else ""
+                    status_text = f"SAFE: COMPLIANT WORKER ({dist_text})" if dist_text else "SAFE: COMPLIANT WORKER"
+                    box_color = (0, 255, 0)
             else:
-                status_text = "SAFE: COMPLIANT WORKER"
-                box_color = (0, 255, 0)
+                status_text = "UNKNOWN: POSITION UNRELIABLE"
+                box_color = (128, 128, 128)
 
             cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)
-            cv2.rectangle(frame, (x1, y1 - 25), (x1 + 270, y1), box_color, -1)
+            cv2.rectangle(frame, (x1, y1 - 25), (x1 + 320, y1), box_color, -1)
             cv2.putText(frame, f"Worker #{idx+1}: {status_text}", (x1 + 5, y1 - 7),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.48, (255, 255, 255), 1)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.44, (255, 255, 255), 1)
             cv2.circle(frame, foot_pt, 5, box_color, -1)
 
         t1 = time.perf_counter()
         state.fps = round(1.0 / max(0.001, (t1 - t0)), 1)
         state.active_workers = len(detections)
-        state.active_violations = violations_count
+        state.active_violations = zone_breaches_count
 
         # Telemetry HUD
         cv2.rectangle(frame, (10, 10), (480, 115), (20, 20, 20), -1)

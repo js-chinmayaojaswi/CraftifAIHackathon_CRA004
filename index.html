@@ -566,7 +566,8 @@
               <div class="space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
                 <div class="flex justify-between"><span>Classification:</span><strong class="text-slate-800 dark:text-slate-100" id="insp-class">Person</strong></div>
                 <div class="flex justify-between"><span>Floor Coords:</span><strong class="text-slate-800 dark:text-slate-100" id="insp-coords">X:220, Y:400</strong></div>
-                <div class="flex justify-between"><span>Hazard Distance:</span><strong id="insp-distance" class="text-emerald-600 dark:text-emerald-400">> 15.0m (Safe)</strong></div>
+                <div class="flex justify-between"><span>Hazard Distance:</span><strong id="insp-distance" class="text-emerald-600 dark:text-emerald-400">5.6m (Safe)</strong></div>
+                <div class="flex justify-between"><span>Zone Safety State:</span><strong id="insp-zone-status" class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">SAFE</strong></div>
                 <div class="flex justify-between"><span>Confidence:</span><strong class="text-slate-800 dark:text-slate-100" id="insp-conf">0.96 (YOLOv8)</strong></div>
               </div>
 
@@ -1268,7 +1269,12 @@
       incidentsDatabase.unshift(inc);
     });
 
-    function isInsideZone(px, py, poly) {
+    // ====================================================================
+    // ACCURATE RESTRICTED ZONE DETECTION & GEOMETRIC INCLUSION LOGIC
+    // ====================================================================
+
+    function isPointInsidePolygon(px, py, poly) {
+      if (typeof px !== 'number' || typeof py !== 'number' || isNaN(px) || isNaN(py) || !poly || poly.length < 3) return false;
       let inside = false;
       for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
         const xi = poly[i].x, yi = poly[i].y;
@@ -1280,18 +1286,157 @@
       return inside;
     }
 
-    function doesBoxIntersectZone(x, y, w, h, poly) {
-      const pts = [
-        { x: x - w/2, y: y - h/2 },
-        { x: x + w/2, y: y - h/2 },
-        { x: x - w/2, y: y + h/2 },
-        { x: x + w/2, y: y + h/2 },
-        { x: x, y: y }
-      ];
-      for (let p of pts) {
-        if (isInsideZone(p.x, p.y, poly)) return true;
+    // Line segment intersection helper
+    function doSegmentsIntersect(p1, p2, p3, p4) {
+      function ccw(a, b, c) {
+        return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
       }
-      return false;
+      return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) && (ccw(p1, p2, p3) !== ccw(p1, p2, p4));
+    }
+
+    /**
+     * Evaluates bounding-box inclusion in restricted hazard zone.
+     * Handles:
+     * - Coordinate validation (rejects invalid/missing coordinates with UNKNOWN)
+     * - Exact Axis-Aligned Bounding Box (AABB) intersection:
+     *     x_min < zone_x_max && x_max > zone_x_min && y_min < zone_y_max && y_max > zone_y_min
+     * - Arbitrary polygon intersection (point-in-poly + edge crossing tests)
+     * - Precise Euclidean clearance distance (meters) to zone boundary
+     * Returns: { state: 'SAFE'|'BREACH'|'UNKNOWN', inZone: bool, distanceMeters: number|null, distancePx, bbox, zoneBounds }
+     */
+    function evaluateZoneSafety(obj, poly) {
+      poly = poly || hazardZone;
+      if (!obj || typeof obj.x !== 'number' || typeof obj.y !== 'number' ||
+          isNaN(obj.x) || isNaN(obj.y) || isNaN(obj.w) || isNaN(obj.h) ||
+          obj.w <= 0 || obj.h <= 0 || !poly || poly.length < 3) {
+        return {
+          state: 'UNKNOWN',
+          inZone: false,
+          distanceMeters: null,
+          distancePx: null,
+          bbox: null,
+          zoneBounds: null
+        };
+      }
+
+      const x_min = obj.x - obj.w / 2;
+      const x_max = obj.x + obj.w / 2;
+      const y_min = obj.y - obj.h / 2;
+      const y_max = obj.y + obj.h / 2;
+
+      let z_xmin = Infinity, z_xmax = -Infinity, z_ymin = Infinity, z_ymax = -Infinity;
+      for (let i = 0; i < poly.length; i++) {
+        z_xmin = Math.min(z_xmin, poly[i].x);
+        z_xmax = Math.max(z_xmax, poly[i].x);
+        z_ymin = Math.min(z_ymin, poly[i].y);
+        z_ymax = Math.max(z_ymax, poly[i].y);
+      }
+
+      // Exact AABB Overlap Condition:
+      // x_min < zone_x_max && x_max > zone_x_min && y_min < zone_y_max && y_max > zone_y_min
+      const overlapsAABB = (x_min < z_xmax && x_max > z_xmin && y_min < z_ymax && y_max > z_ymin);
+
+      // Distance calculation in pixels and meters (scaled 45px ≈ 1.0m)
+      const dx = Math.max(0, z_xmin - x_max, x_min - z_xmax);
+      const dy = Math.max(0, z_ymin - y_max, y_min - z_ymax);
+      const distPx = Math.hypot(dx, dy);
+      const distMeters = distPx === 0 ? 0.0 : Math.round((distPx / 45) * 10) / 10;
+
+      let inZone = false;
+      if (overlapsAABB) {
+        // Check if poly is axis-aligned box (as default hazardZone is)
+        const isBoxPoly = (poly.length === 4 && 
+          ((poly[0].x === poly[3].x && poly[1].x === poly[2].x && poly[0].y === poly[1].y && poly[2].y === poly[3].y) ||
+           (poly[0].x === poly[1].x && poly[2].x === poly[3].x && poly[1].y === poly[2].y && poly[3].y === poly[0].y)));
+
+        if (isBoxPoly) {
+          inZone = true;
+        } else {
+          // General polygonal zone test:
+          // a. Any corner of bbox inside polygon
+          const corners = [
+            { x: x_min, y: y_min }, { x: x_max, y: y_min },
+            { x: x_max, y: y_max }, { x: x_min, y: y_max },
+            { x: obj.x, y: obj.y }
+          ];
+          for (let pt of corners) {
+            if (isPointInsidePolygon(pt.x, pt.y, poly)) {
+              inZone = true;
+              break;
+            }
+          }
+          // b. Any polygon vertex inside bbox
+          if (!inZone) {
+            for (let v of poly) {
+              if (v.x >= x_min && v.x <= x_max && v.y >= y_min && v.y <= y_max) {
+                inZone = true;
+                break;
+              }
+            }
+          }
+          // c. Any bbox edge intersects any polygon edge
+          if (!inZone) {
+            const bEdges = [
+              [corners[0], corners[1]], [corners[1], corners[2]],
+              [corners[2], corners[3]], [corners[3], corners[0]]
+            ];
+            outer: for (let be of bEdges) {
+              for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+                if (doSegmentsIntersect(be[0], be[1], poly[j], poly[i])) {
+                  inZone = true;
+                  break outer;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return {
+        state: inZone ? 'BREACH' : 'SAFE',
+        inZone: inZone,
+        distancePx: distPx,
+        distanceMeters: distMeters,
+        bbox: { x_min, y_min, x_max, y_max },
+        zoneBounds: { z_xmin, z_ymin, z_xmax, z_ymax }
+      };
+    }
+
+    // Backward-compatible helper for legacy callers
+    function doesBoxIntersectZone(x, y, w, h, poly) {
+      const res = evaluateZoneSafety({ x, y, w, h }, poly);
+      return res.inZone;
+    }
+
+    function isInsideZone(px, py, poly) {
+      return isPointInsidePolygon(px, py, poly);
+    }
+
+    // Anti-flicker consecutive-frame confirmation (2 consecutive frames ~ 33-66ms)
+    function updateObjectSafetyState(obj, rawEval) {
+      if (!obj) return 'UNKNOWN';
+      if (!rawEval || rawEval.state === 'UNKNOWN') {
+        obj.safetyState = 'UNKNOWN';
+        obj.breachFrames = 0;
+        obj.clearFrames = 0;
+        return 'UNKNOWN';
+      }
+
+      const CONFIRMATION_FRAMES = 2;
+      if (rawEval.inZone) {
+        obj.breachFrames = (obj.breachFrames || 0) + 1;
+        obj.clearFrames = 0;
+        if (obj.breachFrames >= CONFIRMATION_FRAMES || !obj.safetyState) {
+          obj.safetyState = 'BREACH';
+        }
+      } else {
+        obj.clearFrames = (obj.clearFrames || 0) + 1;
+        obj.breachFrames = 0;
+        if (obj.clearFrames >= CONFIRMATION_FRAMES || !obj.safetyState) {
+          obj.safetyState = 'SAFE';
+        }
+      }
+      return obj.safetyState || rawEval.state;
     }
 
     function logTelemetry(type, objectName, severity, details, rawObj) {
@@ -1498,6 +1643,11 @@
         if (obj.trail.length > 15) obj.trail.shift();
       });
 
+      if (needsNextFrame && selectedObject) {
+        updateInspectorCard(selectedObject);
+        renderObjectSelectors();
+      }
+
       // 8. Draw Entity Trajectory Breadcrumb Trails
       sceneObjects.forEach(obj => {
         if (obj.trail.length > 2) {
@@ -1515,34 +1665,62 @@
       });
 
       // 9. Draw Entities & Tactical Computer Vision Bounding Boxes
-      let currentViolations = 0;
-      let lastIntruderDesc = "";
+      let activeBreachCount = 0;
+      let lastBreachDesc = "";
+      let primaryBreachingObject = null;
 
       sceneObjects.forEach(obj => {
         const bw = obj.w, bh = obj.h;
         const x1 = obj.x - bw/2, y1 = obj.y - bh/2;
         const x2 = obj.x + bw/2, y2 = obj.y + bh/2;
 
-        const inHazard = doesBoxIntersectZone(obj.x, obj.y, bw, bh, hazardZone);
-        let statusText = "NOMINAL (SAFE)";
+        const rawEval = evaluateZoneSafety(obj, hazardZone);
+        const safetyState = updateObjectSafetyState(obj, rawEval);
+        obj.safetyState = safetyState;
+        obj.lastEval = rawEval;
+
+        let statusText = "SAFE";
         let statusColor = "#10B981";
 
-        if (obj.type === "person") {
-          const missingPPE = [];
-          if (!obj.helmet) missingPPE.push("NO_HARDHAT");
-          if (!obj.vest) missingPPE.push("NO_VEST");
+        if (safetyState === "BREACH") {
+          activeBreachCount++;
+          statusColor = "#EF4444";
+          if (!primaryBreachingObject) primaryBreachingObject = obj;
 
-          if (inHazard) {
-            currentViolations++;
+          if (obj.type === "person") {
             statusText = "ZONE_BREACH";
-            statusColor = "#EF4444";
-            lastIntruderDesc = `${obj.name} in Restricted Crane Cell`;
-          } else if (missingPPE.length > 0) {
-            currentViolations++;
-            statusText = missingPPE.join(" + ");
-            statusColor = "#F59E0B";
+            lastBreachDesc = `${obj.name} in Restricted Crane Cell`;
+          } else if (obj.type === "vehicle") {
+            statusText = "VEHICLE_INTRUSION";
+            lastBreachDesc = `${obj.name} (Vehicle Breach)`;
+          } else if (obj.type === "cargo") {
+            statusText = "CARGO_BREACH";
+            lastBreachDesc = `${obj.name} (Foreign Object in Zone)`;
           }
+        } else if (safetyState === "SAFE") {
+          if (obj.type === "person") {
+            const missingPPE = [];
+            if (!obj.helmet) missingPPE.push("NO_HARDHAT");
+            if (!obj.vest) missingPPE.push("NO_VEST");
+            if (missingPPE.length > 0) {
+              statusText = `SAFE (${missingPPE.join(" + ")})`;
+              statusColor = "#F59E0B";
+            } else {
+              const dStr = rawEval.distanceMeters !== null ? ` (${rawEval.distanceMeters.toFixed(1)}m)` : '';
+              statusText = `SAFE${dStr}`;
+              statusColor = "#10B981";
+            }
+          } else {
+            const dStr = rawEval.distanceMeters !== null ? ` (${rawEval.distanceMeters.toFixed(1)}m)` : '';
+            statusText = `SAFE${dStr}`;
+            statusColor = "#10B981";
+          }
+        } else {
+          statusText = "UNKNOWN";
+          statusColor = "#94A3B8";
+        }
 
+        if (obj.type === "person") {
           // Ground Contact Ellipse
           ctx.beginPath();
           ctx.ellipse(obj.x, y2, bw * 0.45, 8, 0, 0, Math.PI * 2);
@@ -1580,13 +1758,6 @@
           }
         } 
         else if (obj.type === "vehicle") {
-          if (inHazard) {
-            currentViolations++;
-            statusText = "VEHICLE_INTRUSION";
-            statusColor = "#EF4444";
-            lastIntruderDesc = `${obj.name} (Vehicle Breach)`;
-          }
-
           // Ground Ellipse
           ctx.beginPath();
           ctx.ellipse(obj.x, y2, bw * 0.5, 10, 0, 0, Math.PI * 2);
@@ -1606,13 +1777,6 @@
           ctx.fill();
         } 
         else if (obj.type === "cargo") {
-          if (inHazard) {
-            currentViolations++;
-            statusText = "FOREIGN_OBJECT";
-            statusColor = "#EF4444";
-            lastIntruderDesc = `${obj.name} (Foreign Debris in Zone)`;
-          }
-
           // Cargo Pallet Box
           ctx.fillStyle = '#92400E';
           ctx.fillRect(x1, y1, bw, bh);
@@ -1680,7 +1844,7 @@
       });
 
       // Update Incursion Counts & Alarm State
-      activeViolationsCount = currentViolations;
+      activeViolationsCount = activeBreachCount;
       const kpiOv = document.getElementById('ov-kpi-violations');
       if (kpiOv) kpiOv.innerText = activeViolationsCount;
       const kpiZones = document.getElementById('zones-active-incursions');
@@ -1692,7 +1856,7 @@
       if (activeViolationsCount > 0) {
         if (alarmBanner) {
           alarmBanner.classList.remove('hidden');
-          alarmText.innerText = "CRITICAL: " + (lastIntruderDesc || "OBJECT / PERSONNEL IN RESTRICTED ZONE");
+          alarmText.innerText = "CRITICAL: " + (lastBreachDesc || "OBJECT / PERSONNEL IN RESTRICTED ZONE");
         }
         const now = Date.now();
         if (now - lastAlertTime > 2500) {
@@ -1701,7 +1865,7 @@
           const kpiTot = document.getElementById('ov-kpi-total');
           if (kpiTot) kpiTot.innerText = totalIncidentsCount;
           playZoneAlarmChime();
-          logTelemetry("ZONE_BREACH", lastIntruderDesc || "Entity", "CRITICAL", "Restricted boundary encroachment detected by vision engine", selectedObject);
+          logTelemetry("ZONE_BREACH", lastBreachDesc || "Restricted Target", "CRITICAL", "Restricted boundary encroachment detected by vision engine", primaryBreachingObject || selectedObject);
         }
       } else {
         if (alarmBanner) alarmBanner.classList.add('hidden');
@@ -1788,6 +1952,8 @@
       if (selectedObject) selectedObject.dragging = false;
       isDragging = false;
       canvas.classList.remove('grabbing');
+      renderObjectSelectors();
+      updateInspectorCard(selectedObject);
     });
 
     // Keyboard Shortcuts & Entity Navigation
@@ -1882,11 +2048,35 @@
       document.getElementById('insp-class').innerText = obj.type.toUpperCase();
       document.getElementById('insp-coords').innerText = `X:${Math.round(obj.x)}, Y:${Math.round(obj.y)}`;
 
-      const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+      const rawEval = evaluateZoneSafety(obj, hazardZone);
+      const safetyState = obj.safetyState || rawEval.state;
+
       const distEl = document.getElementById('insp-distance');
       if (distEl) {
-        distEl.innerText = inHazard ? "0.0m (ZONE BREACH)" : "> 15.0m (Nominal)";
-        distEl.className = inHazard ? "text-red-600 dark:text-red-400 font-bold" : "text-emerald-600 dark:text-emerald-400 font-bold";
+        if (safetyState === 'BREACH') {
+          distEl.innerText = "0.0m (ZONE BREACH)";
+          distEl.className = "text-red-600 dark:text-red-400 font-bold";
+        } else if (safetyState === 'SAFE') {
+          distEl.innerText = `${rawEval.distanceMeters.toFixed(1)}m (Safe)`;
+          distEl.className = "text-emerald-600 dark:text-emerald-400 font-bold";
+        } else {
+          distEl.innerText = "N/A (UNKNOWN)";
+          distEl.className = "text-slate-400 font-bold";
+        }
+      }
+
+      const statusEl = document.getElementById('insp-zone-status');
+      if (statusEl) {
+        if (safetyState === 'BREACH') {
+          statusEl.innerText = "BREACH";
+          statusEl.className = "px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800";
+        } else if (safetyState === 'SAFE') {
+          statusEl.innerText = "SAFE";
+          statusEl.className = "px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800";
+        } else {
+          statusEl.innerText = "UNKNOWN";
+          statusEl.className = "px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700";
+        }
       }
 
       const ppeControls = document.getElementById('insp-ppe-controls');
@@ -1935,9 +2125,11 @@
       sceneObjects[2].x = 380; sceneObjects[2].y = 520;
       sceneObjects[3].x = 180; sceneObjects[3].y = 560;
       sceneObjects[4].x = 340; sceneObjects[4].y = 440;
-      sceneObjects.forEach(o => { o.targetX = null; o.targetY = null; });
+      sceneObjects.forEach(o => { o.targetX = null; o.targetY = null; o.trail = []; });
       logTelemetry("ZONE_CLEARED", "All Entities", "SAFE", "All entities cleared to safe authorized footprint");
       drawScene();
+      renderObjectSelectors();
+      updateInspectorCard(selectedObject);
     }
 
     function renderObjectSelectors() {
@@ -1945,7 +2137,13 @@
       if (!container) return;
       container.innerHTML = sceneObjects.map(obj => {
         const isSel = selectedObject && selectedObject.id === obj.id;
-        const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+        const rawEval = evaluateZoneSafety(obj, hazardZone);
+        const safetyState = obj.safetyState || rawEval.state;
+        const isBreach = safetyState === 'BREACH';
+        const isUnknown = safetyState === 'UNKNOWN';
+
+        const dLabel = isBreach ? '0.0m' : (isUnknown ? 'N/A' : (rawEval.distanceMeters !== null ? rawEval.distanceMeters.toFixed(1) + 'm' : ''));
+
         return `
           <div onclick="selectObject(sceneObjects.find(o => o.id === ${obj.id}))" 
                class="cursor-pointer p-2 rounded border transition-all ${
@@ -1955,15 +2153,16 @@
             <div class="flex items-center justify-between font-mono text-[11px] font-bold">
               <span class="${isSel ? 'text-techcyan-600 dark:text-techcyan-400' : 'text-slate-800 dark:text-slate-200'}">${obj.name}</span>
               <span class="text-[9px] px-1 py-0.2 rounded font-mono ${
-                inHazard ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' 
-                         : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'
+                isBreach ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800' 
+                         : isUnknown ? 'bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400'
+                         : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
               }">
-                ${inHazard ? 'BREACH' : 'SAFE'}
+                ${isBreach ? 'BREACH' : (isUnknown ? 'UNKNOWN' : 'SAFE')}
               </span>
             </div>
             <div class="text-[10px] text-slate-400 font-mono mt-1 flex justify-between">
               <span>#${obj.id}</span>
-              <span>${Math.round(obj.x)}, ${Math.round(obj.y)}</span>
+              <span>${dLabel}</span>
             </div>
           </div>
         `;
@@ -2018,7 +2217,11 @@
       if (!cardsCont || !tableBody) return;
 
       cardsCont.innerHTML = sceneObjects.map(obj => {
-        const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+        const rawEval = evaluateZoneSafety(obj, hazardZone);
+        const safetyState = obj.safetyState || rawEval.state;
+        const isBreach = safetyState === 'BREACH';
+        const isUnknown = safetyState === 'UNKNOWN';
+
         return `
           <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] rounded p-3 space-y-2 font-mono text-xs">
             <div class="flex items-center justify-between">
@@ -2027,15 +2230,17 @@
                 ${obj.name}
               </span>
               <span class="text-[9px] px-1 py-0.2 rounded font-mono font-bold ${
-                inHazard ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' 
-                         : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'
+                isBreach ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800' 
+                         : isUnknown ? 'bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400'
+                         : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
               }">
-                ${inHazard ? 'ZONE BREACH' : 'CLEAR'}
+                ${isBreach ? 'ZONE BREACH' : isUnknown ? 'UNKNOWN' : 'CLEAR (SAFE)'}
               </span>
             </div>
             <div class="space-y-1 text-slate-500 dark:text-slate-400 text-[11px]">
               <div class="flex justify-between"><span>Track ID:</span><strong class="text-slate-800 dark:text-slate-200">#${obj.id}</strong></div>
               <div class="flex justify-between"><span>Floor Coords:</span><strong class="text-slate-800 dark:text-slate-200">X:${Math.round(obj.x)}, Y:${Math.round(obj.y)}</strong></div>
+              <div class="flex justify-between"><span>Hazard Distance:</span><strong class="${isBreach ? 'text-red-600 dark:text-red-400 font-bold' : isUnknown ? 'text-slate-400' : 'text-emerald-600 dark:text-emerald-400 font-bold'}">${isBreach ? '0.0m (Inside Exclusion)' : isUnknown ? 'N/A' : (rawEval.distanceMeters !== null ? rawEval.distanceMeters.toFixed(1) + 'm (Clear)' : 'Safe')}</strong></div>
               <div class="flex justify-between"><span>PPE Verified:</span><strong class="text-slate-800 dark:text-slate-200">${obj.type === 'person' ? (obj.helmet && obj.vest ? '100% Pass' : 'Gaps Flagged') : 'N/A'}</strong></div>
             </div>
             <button onclick="navigateTab('monitoring'); selectObject(sceneObjects.find(o => o.id === ${obj.id}));" class="w-full py-1 rounded bg-slate-50 dark:bg-[#131B2E] hover:bg-slate-100 text-techcyan-600 dark:text-techcyan-400 text-[10px] font-bold border border-slate-200 dark:border-[#1E293B]">
@@ -2046,18 +2251,22 @@
       }).join('');
 
       tableBody.innerHTML = sceneObjects.map(obj => {
-        const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+        const rawEval = evaluateZoneSafety(obj, hazardZone);
+        const safetyState = obj.safetyState || rawEval.state;
+        const isBreach = safetyState === 'BREACH';
+        const isUnknown = safetyState === 'UNKNOWN';
+
         return `
           <tr class="hover:bg-slate-50 dark:hover:bg-[#131B2E]/60 transition-colors">
             <td class="p-2.5 font-bold text-slate-900 dark:text-white">#${obj.id}</td>
             <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-200">${obj.name}</td>
             <td class="p-2.5 uppercase text-slate-500">${obj.type}</td>
             <td class="p-2.5 text-slate-500">${Math.round(obj.x)}, ${Math.round(obj.y)}</td>
-            <td class="p-2.5 ${inHazard ? 'text-red-600 dark:text-red-400 font-bold' : 'text-emerald-600 dark:text-emerald-400'}">${inHazard ? '0.0m (Inside Exclusion)' : '> 15.0m (Nominal)'}</td>
+            <td class="p-2.5 ${isBreach ? 'text-red-600 dark:text-red-400 font-bold' : isUnknown ? 'text-slate-400' : 'text-emerald-600 dark:text-emerald-400'}">${isBreach ? '0.0m (Inside Exclusion)' : isUnknown ? 'N/A' : (rawEval.distanceMeters !== null ? rawEval.distanceMeters.toFixed(1) + 'm (Clear)' : 'Safe')}</td>
             <td class="p-2.5">${obj.type === 'person' ? (obj.helmet && obj.vest ? '<span class="text-emerald-600 dark:text-emerald-400 font-semibold">100% Compliant</span>' : '<span class="text-amber-600 dark:text-amber-400 font-semibold">Gaps Flagged</span>') : 'N/A'}</td>
             <td class="p-2.5">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${inHazard ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'}">
-                ${inHazard ? 'Encroachment' : 'Nominal'}
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${isBreach ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' : isUnknown ? 'bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'}">
+                ${isBreach ? 'Encroachment' : isUnknown ? 'Unknown' : 'Nominal (Safe)'}
               </span>
             </td>
             <td class="p-2.5 text-right">
@@ -2146,10 +2355,14 @@
       zctx.fillText('CRANE OPERATION RESTRICTED ENCLOSURE', hazardZone[0].x * scaleX + 8, hazardZone[0].y * scaleY - 6);
 
       sceneObjects.forEach(obj => {
-        const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+        const rawEval = evaluateZoneSafety(obj, hazardZone);
+        const safetyState = obj.safetyState || rawEval.state;
+        const isBreach = safetyState === 'BREACH';
+        const isUnknown = safetyState === 'UNKNOWN';
+
         zctx.beginPath();
         zctx.arc(obj.x * scaleX, obj.y * scaleY, 5, 0, Math.PI * 2);
-        zctx.fillStyle = inHazard ? '#EF4444' : '#10B981';
+        zctx.fillStyle = isBreach ? '#EF4444' : (isUnknown ? '#94A3B8' : '#10B981');
         zctx.fill();
         zctx.strokeStyle = '#FFFFFF';
         zctx.lineWidth = 1;
@@ -2526,10 +2739,10 @@
     // INITIAL SYSTEM BOOT
     // ====================================================================
     initTheme();
+    drawScene();
     renderObjectSelectors();
     updateInspectorCard(selectedObject);
     initOverviewCharts();
-    drawScene();
     updateOverviewRecent();
 
     window.addEventListener('beforeunload', () => {
