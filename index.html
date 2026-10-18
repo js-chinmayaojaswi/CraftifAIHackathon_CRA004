@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SafetySentinel AI | Minimal Edge Physical AI Safety Dashboard</title>
-
-  <!-- Typography -->
+  <title>SENTINEL-EDGE // Industrial Safety & Physical AI Command System</title>
+  
+  <!-- Typography: Plus Jakarta Sans for UI + JetBrains Mono for telemetry -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -18,16 +18,40 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace']
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']
           },
           colors: {
-            brand: {
-              50: '#F0F9FF',
-              100: '#E0F2FE',
+            obsidian: {
+              950: '#06090F',
+              900: '#0A0E17',
+              850: '#0E1422',
+              800: '#131B2E',
+              700: '#1C2842',
+              600: '#2A3B5F'
+            },
+            steel: {
+              50: '#F8FAFC',
+              100: '#F1F5F9',
+              200: '#E2E8F0',
+              300: '#CBD5E1',
+              400: '#94A3B8',
+              500: '#64748B',
+              600: '#475569',
+              700: '#334155',
+              800: '#1E293B',
+              900: '#0F172A'
+            },
+            techcyan: {
+              400: '#38BDF8',
               500: '#0EA5E9',
               600: '#0284C7',
               700: '#0369A1'
+            },
+            signals: {
+              safe: '#10B981',
+              warning: '#F59E0B',
+              danger: '#EF4444'
             }
           }
         }
@@ -35,120 +59,147 @@
     }
   </script>
 
-  <!-- Icons & Charts -->
+  <!-- Lucide Icons & Chart.js -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* Clean scrollbar */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    /* Industrial scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    .dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 2px; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 2px; }
 
-    @keyframes pulse-subtle {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+    /* Engineering grid background */
+    .blueprint-grid-dark {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(30, 41, 59, 0.35) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
     }
-    .pulse-indicator { animation: pulse-subtle 1.8s infinite ease-in-out; }
+    .blueprint-grid-light {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(226, 232, 240, 0.8) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.8) 1px, transparent 1px);
+    }
+
+    /* Subdued tactical pulse */
+    @keyframes tactical-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.96); }
+    }
+    .tactical-pulse { animation: tactical-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+    /* Canvas crosshair styling */
+    .viewport-canvas {
+      cursor: crosshair;
+    }
+    .viewport-canvas.grabbing {
+      cursor: grabbing;
+    }
   </style>
 </head>
-<body class="bg-slate-50 dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 font-sans antialiased min-h-screen transition-colors duration-200 flex flex-col selection:bg-brand-500 selection:text-white">
+<body class="bg-[#F8FAFC] dark:bg-[#070A10] text-slate-800 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col transition-colors duration-150 selection:bg-techcyan-500 selection:text-white">
 
   <!-- ==================================================================== -->
-  <!-- TOP NAVIGATION BAR                                                  -->
+  <!-- COMMAND HEADER (TECHNICAL BREADCRUMB & METRICS RAIL)                -->
   <!-- ==================================================================== -->
-  <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0D1322]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 px-4 sm:px-6 py-2.5 transition-colors duration-200 flex items-center justify-between">
+  <header class="h-13 bg-white dark:bg-[#0A0E17] border-b border-slate-200 dark:border-[#161F33] px-3 sm:px-5 flex items-center justify-between shrink-0 select-none transition-colors duration-150 z-30">
     
-    <!-- Left: Mobile Menu + Branding -->
+    <!-- Left: Facility ID & Node Tag -->
     <div class="flex items-center gap-3">
-      <button onclick="toggleSidebar()" class="lg:hidden p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-        <i data-lucide="menu" class="w-5 h-5"></i>
+      <button onclick="toggleSidebar()" class="lg:hidden p-1.5 rounded text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#131B2E]" aria-label="Toggle navigation">
+        <i data-lucide="menu" class="w-4 h-4"></i>
       </button>
 
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-brand-600 dark:bg-brand-500 text-white flex items-center justify-center font-bold shadow-sm shadow-brand-500/20">
-          <i data-lucide="shield-check" class="w-4 h-4"></i>
+        <div class="w-7 h-7 rounded bg-techcyan-600 dark:bg-techcyan-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+          <i data-lucide="shield" class="w-4 h-4"></i>
         </div>
-        <div>
+        <div class="flex flex-col">
           <div class="flex items-center gap-2">
-            <span class="font-bold text-sm tracking-tight">SafetySentinel <span class="text-brand-600 dark:text-brand-500 font-mono text-xs font-semibold">AI</span></span>
-            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-medium">Edge Node 01</span>
+            <span class="font-bold text-xs sm:text-sm tracking-tight text-slate-900 dark:text-white font-mono">SENTINEL-EDGE</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#1E293B]">NODE-01</span>
           </div>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">CraftifAI PipeGen • Physical AI Safety Command</p>
+          <span class="text-[10px] text-slate-400 font-mono tracking-tight hidden sm:block">CraftifAI PipeGen // Vision Pipeline v0.5.1</span>
         </div>
+      </div>
+
+      <div class="hidden xl:flex items-center gap-1.5 pl-3 border-l border-slate-200 dark:border-[#161F33] text-[11px] font-mono text-slate-500">
+        <span>FACILITY: <strong class="text-slate-700 dark:text-slate-300">NORTH BAY</strong></span>
+        <span class="text-slate-300 dark:text-slate-700">•</span>
+        <span>ZONE: <strong class="text-slate-700 dark:text-slate-300">CRANE CELL 04</strong></span>
       </div>
     </div>
 
-    <!-- Center: Live Diagnostic Badges -->
-    <div class="hidden xl:flex items-center gap-2 text-xs font-mono">
-      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-indicator"></span>
-        <span class="text-slate-400 dark:text-slate-500">ENGINE:</span>
-        <span class="font-bold text-slate-900 dark:text-white">TensorRT FP16 (152.9 FPS)</span>
+    <!-- Center: Live Telemetry Badges (Engineering Telemetry) -->
+    <div class="hidden md:flex items-center gap-2 text-[11px] font-mono">
+      <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] text-slate-600 dark:text-slate-300">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 tactical-pulse"></span>
+        <span class="text-slate-400">TRT FP16:</span>
+        <span class="font-bold text-slate-900 dark:text-white" id="header-fps-stat">152.9 FPS</span>
       </div>
 
-      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
-        <i data-lucide="radio" class="w-3.5 h-3.5 text-brand-500"></i>
-        <span class="text-slate-400 dark:text-slate-500">MQTT:</span>
-        <span class="text-emerald-600 dark:text-emerald-400 font-bold">broker.hivemq.com</span>
-      </div>
-
-      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
-        <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-500"></i>
-        <span class="text-slate-400 dark:text-slate-500">LATENCY:</span>
+      <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] text-slate-600 dark:text-slate-300">
+        <span class="text-slate-400">LATENCY:</span>
         <span class="font-bold text-slate-900 dark:text-white">6.54 ms</span>
       </div>
+
+      <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] text-slate-600 dark:text-slate-300">
+        <i data-lucide="radio" class="w-3 h-3 text-techcyan-500"></i>
+        <span class="text-slate-400">MQTT:</span>
+        <span class="font-semibold text-emerald-600 dark:text-emerald-400">ONLINE</span>
+      </div>
     </div>
 
-    <!-- Right: Theme Toggle, Audio Siren, Profile -->
-    <div class="flex items-center gap-2 sm:gap-2.5">
+    <!-- Right: Controls Rail (Theme, Sound, Shortcuts, Operator) -->
+    <div class="flex items-center gap-1.5 sm:gap-2">
       
-      <!-- Theme Toggle Button (Light / Dark) -->
-      <button onclick="toggleTheme()" id="theme-toggle" class="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center" title="Toggle Light / Dark Mode">
-        <i data-lucide="moon" id="theme-icon-moon" class="w-4 h-4 hidden dark:block text-brand-400"></i>
-        <i data-lucide="sun" id="theme-icon-sun" class="w-4 h-4 block dark:hidden text-amber-500"></i>
+      <!-- Theme Switcher -->
+      <button onclick="toggleTheme()" id="btn-theme" class="p-1.5 rounded border border-slate-200 dark:border-[#182238] bg-white dark:bg-[#0E1422] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#131B2E] transition-colors" title="Toggle Theme (Shortcut: T)">
+        <i data-lucide="sun" id="theme-sun-icon" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+        <i data-lucide="moon" id="theme-moon-icon" class="w-4 h-4 block dark:hidden text-slate-600"></i>
       </button>
 
-      <!-- Audio Siren Toggle -->
-      <button onclick="toggleAudio()" id="btn-audio" class="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 text-xs font-mono" title="Toggle Alarm Sound">
-        <i data-lucide="volume-2" id="icon-audio" class="w-4 h-4"></i>
-        <span class="hidden md:inline text-[11px]" id="text-audio">Siren: ON</span>
+      <!-- Audio Warning Toggle -->
+      <button onclick="toggleAudio()" id="btn-audio" class="p-1.5 rounded border border-slate-200 dark:border-[#182238] bg-white dark:bg-[#0E1422] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#131B2E] transition-colors flex items-center gap-1 font-mono text-[11px]" title="Toggle Audio Alarms (Shortcut: M)">
+        <i data-lucide="volume-2" id="icon-audio" class="w-4 h-4 text-emerald-500"></i>
+        <span class="hidden sm:inline" id="text-audio">SIREN: ON</span>
       </button>
 
-      <!-- Notification Bell with Dropdown -->
+      <!-- Keyboard Shortcuts Modal Trigger -->
+      <button onclick="openShortcutsModal()" class="p-1.5 rounded border border-slate-200 dark:border-[#182238] bg-white dark:bg-[#0E1422] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#131B2E] transition-colors font-mono text-xs px-2" title="Keyboard Shortcuts (Shortcut: ?)">
+        <span class="font-bold">?</span>
+      </button>
+
+      <!-- Notification Feed Dropdown -->
       <div class="relative">
-        <button onclick="toggleNotifications()" class="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative">
+        <button onclick="toggleNotifications()" class="p-1.5 rounded border border-slate-200 dark:border-[#182238] bg-white dark:bg-[#0E1422] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#131B2E] transition-colors relative" title="Alert Feed">
           <i data-lucide="bell" class="w-4 h-4"></i>
-          <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>
+          <span id="notif-badge-dot" class="hidden absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-signals-danger"></span>
         </button>
 
-        <!-- Dropdown Card -->
-        <div id="notif-menu" class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-3 text-xs font-mono z-50">
-          <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-2">
-            <span class="font-bold text-slate-900 dark:text-white">Active Alerts Feed</span>
-            <span class="text-[10px] text-brand-600 dark:text-brand-400">QoS 1 Real-Time</span>
+        <!-- Dropdown Menu -->
+        <div id="notif-menu" class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#1E293B] rounded shadow-xl p-3 text-xs font-mono z-50">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#182238] mb-2">
+            <span class="font-bold text-slate-900 dark:text-white">Active Alert Stream</span>
+            <span class="text-[10px] text-slate-400">MQTT QoS 1</span>
           </div>
-          <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1" id="dropdown-notif-list">
-            <div class="p-2 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-800 dark:text-red-300">
-              <div class="flex justify-between font-bold text-[10px]">
-                <span>ZONE_INTRUSION</span>
-                <span class="text-slate-500">Just Now</span>
-              </div>
-              <div class="text-[11px] mt-0.5">Worker #102 in Heavy Crane Zone</div>
-            </div>
+          <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1" id="dropdown-notif-list">
+            <div class="text-[11px] text-slate-400 p-2 text-center">System nominal. No active violations.</div>
           </div>
         </div>
       </div>
 
-      <!-- User Avatar Profile -->
-      <div class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-        <div class="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold text-xs flex items-center justify-center">
+      <!-- Operator Avatar Badge -->
+      <div class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-[#161F33] text-left font-mono">
+        <div class="w-7 h-7 rounded bg-slate-200 dark:bg-[#131B2E] text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs font-bold">
           OP
         </div>
-        <div class="hidden sm:block text-left font-mono">
-          <div class="text-xs font-semibold text-slate-900 dark:text-white leading-tight">Safety Officer</div>
-          <div class="text-[10px] text-slate-500 dark:text-slate-400">Site-North</div>
+        <div class="hidden lg:block leading-none">
+          <div class="text-xs font-semibold text-slate-900 dark:text-white">Operator 04</div>
+          <div class="text-[10px] text-slate-400">Shift Lead</div>
         </div>
       </div>
 
@@ -156,356 +207,426 @@
   </header>
 
   <!-- ==================================================================== -->
-  <!-- MAIN LAYOUT (SIDEBAR + WORKSPACE)                                   -->
+  <!-- MAIN WORKSPACE LAYOUT (SIDEBAR + CONTENT PANELS)                    -->
   <!-- ==================================================================== -->
   <div class="flex-1 flex overflow-hidden">
-
+    
     <!-- Sidebar Navigation -->
-    <aside id="sidebar" class="w-64 bg-white dark:bg-[#0D1322] border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between shrink-0 fixed lg:static inset-y-0 left-0 z-30 transition-transform duration-200 -translate-x-full lg:translate-x-0 pt-14 lg:pt-0">
+    <aside id="sidebar" class="w-60 bg-white dark:bg-[#0A0E17] border-r border-slate-200 dark:border-[#161F33] flex flex-col justify-between shrink-0 fixed lg:static inset-y-0 left-0 z-20 transition-transform duration-150 -translate-x-full lg:translate-x-0 pt-14 lg:pt-0">
       
-      <div class="p-3 space-y-1 overflow-y-auto">
-        <div class="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 py-2">Navigation</div>
+      <div class="p-2.5 space-y-4 overflow-y-auto">
+        
+        <!-- Section: Operations -->
+        <div class="space-y-0.5">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2.5 py-1.5">Operations</div>
 
-        <button onclick="navigateTab('overview')" id="nav-overview" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all bg-brand-50 dark:bg-brand-500/10 border border-brand-200 dark:border-brand-500/20 text-brand-700 dark:text-brand-400">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-          <span>Overview</span>
-        </button>
+          <button onclick="navigateTab('overview')" id="nav-overview" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all bg-techcyan-50 dark:bg-techcyan-500/10 text-techcyan-700 dark:text-techcyan-400 border border-techcyan-200 dark:border-techcyan-500/20">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+            <span>Overview</span>
+            <span class="ml-auto text-[10px] font-mono text-slate-400">[1]</span>
+          </button>
 
-        <button onclick="navigateTab('monitoring')" id="nav-monitoring" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent">
-          <i data-lucide="video" class="w-4 h-4"></i>
-          <span>Live Monitoring</span>
-          <span class="ml-auto w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-        </button>
+          <button onclick="navigateTab('monitoring')" id="nav-monitoring" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
+            <i data-lucide="scan" class="w-4 h-4"></i>
+            <span>Live Perception</span>
+            <span class="ml-auto w-1.5 h-1.5 rounded-full bg-signals-safe"></span>
+          </button>
 
-        <button onclick="navigateTab('tracking')" id="nav-tracking" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent">
-          <i data-lucide="users" class="w-4 h-4"></i>
-          <span>Worker Tracking</span>
-          <span class="ml-auto text-[10px] font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300">4 Active</span>
-        </button>
+          <button onclick="navigateTab('tracking')" id="nav-tracking" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
+            <i data-lucide="crosshair" class="w-4 h-4"></i>
+            <span>Spatial Tracking</span>
+            <span class="ml-auto text-[10px] font-mono px-1 rounded bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400" id="sb-entity-count">5 Entities</span>
+          </button>
+        </div>
 
-        <button onclick="navigateTab('ppe')" id="nav-ppe" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent">
-          <i data-lucide="hard-hat" class="w-4 h-4"></i>
-          <span>PPE Compliance</span>
-          <span class="ml-auto text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">83.3%</span>
-        </button>
+        <!-- Section: Safety & Enforcement -->
+        <div class="space-y-0.5">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2.5 py-1.5">Enforcement</div>
 
-        <button onclick="navigateTab('zones')" id="nav-zones" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent">
-          <i data-lucide="alert-octagon" class="w-4 h-4"></i>
-          <span>Hazard Zones</span>
-          <span class="ml-auto text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold">1 Active</span>
-        </button>
+          <button onclick="navigateTab('ppe')" id="nav-ppe" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
+            <i data-lucide="hard-hat" class="w-4 h-4"></i>
+            <span>PPE Verification</span>
+            <span class="ml-auto text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold" id="sb-ppe-compliance">83.3%</span>
+          </button>
 
-        <button onclick="navigateTab('incidents')" id="nav-incidents" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent">
-          <i data-lucide="file-text" class="w-4 h-4"></i>
-          <span>Incident Logs</span>
-          <span class="ml-auto text-[10px] font-mono bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded" id="sidebar-incident-badge">0 Alerts</span>
-        </button>
+          <button onclick="navigateTab('zones')" id="nav-zones" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
+            <i data-lucide="octagon" class="w-4 h-4"></i>
+            <span>Geofence Zones</span>
+            <span class="ml-auto text-[10px] font-mono px-1 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800" id="sb-zone-status">1 Active</span>
+          </button>
 
-        <div class="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pt-4 pb-2">Intelligence</div>
+          <button onclick="navigateTab('incidents')" id="nav-incidents" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
+            <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+            <span>Audit Ledger</span>
+            <span class="ml-auto text-[10px] font-mono px-1 rounded bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400" id="sidebar-incident-badge">0 Events</span>
+          </button>
+        </div>
 
-        <button onclick="navigateTab('pipeline')" id="nav-pipeline" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent">
-          <i data-lucide="cpu" class="w-4 h-4"></i>
-          <span>Pipeline Analytics</span>
-          <span class="ml-auto text-[10px] font-mono text-brand-600 dark:text-brand-400 font-semibold">TensorRT</span>
-        </button>
+        <!-- Section: Infrastructure -->
+        <div class="space-y-0.5">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2.5 py-1.5">Infrastructure</div>
+
+          <button onclick="navigateTab('pipeline')" id="nav-pipeline" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
+            <i data-lucide="cpu" class="w-4 h-4"></i>
+            <span>Pipeline Engine</span>
+            <span class="ml-auto text-[10px] font-mono text-techcyan-600 dark:text-techcyan-400">TRT-FP16</span>
+          </button>
+        </div>
+
       </div>
 
-      <!-- Edge Hardware Diagnostics Footer -->
-      <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/40">
-        <div class="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-xs space-y-1.5">
+      <!-- Edge Device Diagnostics Card -->
+      <div class="p-2.5 border-t border-slate-200 dark:border-[#161F33] bg-slate-50 dark:bg-[#080C14]">
+        <div class="p-2 rounded bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] font-mono text-[11px] space-y-1.5">
           <div class="flex justify-between items-center text-[10px]">
-            <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              NVIDIA RTX 4050
-            </span>
-            <span class="text-brand-600 dark:text-brand-400 font-bold">ADA LOVELACE</span>
+            <span class="text-slate-500 font-semibold">NVIDIA RTX 4050</span>
+            <span class="text-techcyan-600 dark:text-techcyan-400 font-bold">ADA LOVELACE</span>
           </div>
 
           <div>
-            <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1">
+            <div class="flex justify-between text-[10px] text-slate-400 mb-0.5">
               <span>VRAM Usage</span>
-              <span class="font-semibold text-slate-800 dark:text-slate-200">559 MB / 6141 MB</span>
+              <span class="text-slate-700 dark:text-slate-300 font-semibold">559 MB / 6.1 GB</span>
             </div>
-            <div class="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div class="h-full bg-brand-500 rounded-full" style="width: 14%;"></div>
+            <div class="w-full h-1 bg-slate-100 dark:bg-[#182238] rounded overflow-hidden">
+              <div class="h-full bg-techcyan-500 rounded" style="width: 14%;"></div>
             </div>
           </div>
 
-          <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
-            <span>Temp: <strong class="text-slate-700 dark:text-slate-300">48°C</strong></span>
+          <div class="flex justify-between text-[10px] text-slate-500 pt-0.5">
+            <span>Core: <strong class="text-slate-700 dark:text-slate-300">48°C</strong></span>
             <span>Power: <strong class="text-slate-700 dark:text-slate-300">5W / 92W</strong></span>
           </div>
         </div>
       </div>
+
     </aside>
 
-    <!-- Main Content Work Area -->
-    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-
+    <!-- Main Workspace Container -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6 space-y-5">
+      
       <!-- ================================================================ -->
-      <!-- TAB 1: OVERVIEW DASHBOARD                                        -->
+      <!-- TAB 1: EXECUTIVE OPERATIONS OVERVIEW                            -->
       <!-- ================================================================ -->
-      <section id="view-overview" class="tab-view space-y-6">
+      <section id="view-overview" class="tab-view space-y-5">
         
-        <!-- Header Banner -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div class="space-y-1">
-            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Worker Safety & Perception Overview</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
-              Real-time multi-worker trajectory tracking, zero-delay hazard zone intrusion detection, and automated PPE compliance verification.
+        <!-- Header Strip -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-[#161F33]">
+          <div>
+            <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight font-mono">SITE SAFETY & PERCEPTION OVERVIEW</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Autonomous multi-worker spatial tracking, instant geofence intrusion interlock, and PPE enforcement telemetry.
             </p>
           </div>
           <div class="flex items-center gap-2 font-mono text-xs">
-            <button onclick="navigateTab('monitoring')" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center gap-1.5 shadow-sm">
-              <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
-              <span>Live Monitor</span>
+            <button onclick="navigateTab('monitoring')" class="px-3 py-1.5 rounded bg-techcyan-600 hover:bg-techcyan-700 text-white font-medium flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="scan" class="w-3.5 h-3.5"></i>
+              <span>Launch Live HUD</span>
             </button>
-            <button onclick="sendToZone('worker')" class="px-3.5 py-2 rounded-lg bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 font-semibold flex items-center gap-1.5">
+            <button onclick="sendToZone('worker')" class="px-3 py-1.5 rounded bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-900/80 text-red-700 dark:text-red-300 font-medium flex items-center gap-1.5">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>Simulate Intrusion</span>
             </button>
           </div>
         </div>
 
-        <!-- 5 KPI Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3.5 font-mono">
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-            <div class="text-[11px] text-slate-500 dark:text-slate-400">Workers Monitored</div>
-            <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">3 <span class="text-xs font-normal text-emerald-600 dark:text-emerald-400">Active</span></div>
-            <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Persistent IDs</div>
+        <!-- 5 Telemetry Metrics Strip -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 font-mono">
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3.5 rounded">
+            <div class="text-[10px] uppercase text-slate-400 tracking-wider">Active Entities</div>
+            <div class="text-xl font-bold text-slate-900 dark:text-white mt-1">5 <span class="text-xs font-normal text-emerald-600 dark:text-emerald-400">Tracking</span></div>
+            <div class="text-[10px] text-slate-400 mt-0.5">3 Workers, 1 Vehicle, 1 Cargo</div>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-            <div class="text-[11px] text-slate-500 dark:text-slate-400">PPE Compliance</div>
-            <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">83.3%</div>
-            <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Hardhats & Vests</div>
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3.5 rounded">
+            <div class="text-[10px] uppercase text-slate-400 tracking-wider">PPE Compliance</div>
+            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1" id="ov-ppe-rate">83.3%</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Hardhats & Safety Vests</div>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-            <div class="text-[11px] text-slate-500 dark:text-slate-400">Hazard Incursions</div>
-            <div class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1" id="ov-kpi-violations">0</div>
-            <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Crane Machinery Zone</div>
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3.5 rounded">
+            <div class="text-[10px] uppercase text-slate-400 tracking-wider">Zone Incursions</div>
+            <div class="text-xl font-bold text-slate-900 dark:text-white mt-1" id="ov-kpi-violations">0</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Crane Cell 04 Geofence</div>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-            <div class="text-[11px] text-slate-500 dark:text-slate-400">Total Logged Events</div>
-            <div class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1" id="ov-kpi-total">0</div>
-            <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Dispatched to MQTT</div>
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3.5 rounded">
+            <div class="text-[10px] uppercase text-slate-400 tracking-wider">MQTT Dispatches</div>
+            <div class="text-xl font-bold text-techcyan-600 dark:text-techcyan-400 mt-1" id="ov-kpi-total">0</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">QoS 1 Safety Broadcasts</div>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm col-span-2 md:col-span-1">
-            <div class="text-[11px] text-slate-500 dark:text-slate-400">Inference Throughput</div>
-            <div class="text-2xl font-bold text-brand-600 dark:text-brand-400 mt-1">152.9 <span class="text-xs text-slate-400">FPS</span></div>
-            <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">TensorRT FP16 (6.54ms)</div>
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3.5 rounded col-span-2 lg:col-span-1">
+            <div class="text-[10px] uppercase text-slate-400 tracking-wider">Engine Performance</div>
+            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">152.9 <span class="text-xs text-slate-400">FPS</span></div>
+            <div class="text-[10px] text-slate-400 mt-0.5">6.54 ms Latency (4.7x speedup)</div>
           </div>
         </div>
 
-        <!-- Charts Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 font-mono text-xs">
-              <span class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <i data-lucide="activity" class="w-4 h-4 text-brand-500"></i>
-                Edge Inference Throughput (FPS) & Latency (ms)
+        <!-- Latency Breakdown Waterfall Strip -->
+        <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3.5 rounded font-mono text-xs space-y-2">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="gauge" class="w-3.5 h-3.5 text-techcyan-500"></i>
+              Pipeline Latency Budget Breakdown (Total: 6.54 ms // Budget: 33.3 ms for 30 FPS)
+            </span>
+            <span class="text-emerald-600 dark:text-emerald-400 font-bold">19.6% Budget Utilized (Headroom: 26.76 ms)</span>
+          </div>
+
+          <!-- Horizontal Stage Segments -->
+          <div class="w-full h-3 rounded overflow-hidden flex bg-slate-100 dark:bg-[#131B2E]">
+            <div class="h-full bg-techcyan-500" style="width: 12.5%;" title="Decode & Preprocess: 0.82 ms (12.5%)"></div>
+            <div class="h-full bg-indigo-500" style="width: 77.7%;" title="TensorRT YOLOv8n Inference: 5.08 ms (77.7%)"></div>
+            <div class="h-full bg-emerald-500" style="width: 9.8%;" title="Geofence & Interlock Logic: 0.64 ms (9.8%)"></div>
+          </div>
+
+          <div class="grid grid-cols-3 text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
+            <div><strong class="text-techcyan-600 dark:text-techcyan-400">■ Preprocess:</strong> 0.82 ms (640x640 letterbox)</div>
+            <div><strong class="text-indigo-600 dark:text-indigo-400">■ TensorRT FP16:</strong> 5.08 ms (Inference)</div>
+            <div><strong class="text-emerald-600 dark:text-emerald-400">■ Geofence & Sinks:</strong> 0.64 ms (Containment & MQTT)</div>
+          </div>
+        </div>
+
+        <!-- Charts Layout Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="lg:col-span-2 bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-4 rounded space-y-2">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#182238] pb-2 font-mono text-xs">
+              <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <i data-lucide="trending-up" class="w-3.5 h-3.5 text-techcyan-500"></i>
+                Edge Inference Stability (FPS vs Frame Latency)
               </span>
-              <span class="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">4.7x Speedup</span>
+              <span class="text-[10px] text-slate-400 font-mono">Sampled at 1 Hz</span>
             </div>
-            <div class="h-60 relative">
+            <div class="h-56 relative">
               <canvas id="chart-performance"></canvas>
             </div>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm space-y-3 flex flex-col justify-between">
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 font-mono text-xs">
-              <span class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-500"></i>
-                PPE Compliance Ratio
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-4 rounded space-y-2 flex flex-col justify-between">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#182238] pb-2 font-mono text-xs">
+              <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <i data-lucide="pie-chart" class="w-3.5 h-3.5 text-emerald-500"></i>
+                PPE Compliance Distribution
               </span>
-              <span class="text-slate-400 text-[10px]">Shift Summary</span>
+              <span class="text-[10px] text-slate-400">Live Census</span>
             </div>
-            <div class="h-48 relative flex items-center justify-center">
+            <div class="h-44 relative flex items-center justify-center">
               <canvas id="chart-ppe"></canvas>
             </div>
-            <div class="grid grid-cols-2 gap-2 text-center font-mono text-xs pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                <div class="text-[10px] text-slate-500 dark:text-slate-400">Compliant</div>
-                <div class="text-emerald-600 dark:text-emerald-400 font-bold text-sm">83.3%</div>
+            <div class="grid grid-cols-2 gap-2 text-center font-mono text-xs pt-2 border-t border-slate-100 dark:border-[#182238]">
+              <div class="p-1.5 rounded bg-slate-50 dark:bg-[#131B2E]">
+                <div class="text-[10px] text-slate-400">Compliant Items</div>
+                <div class="text-emerald-600 dark:text-emerald-400 font-bold" id="ov-chart-comp-val">5 / 6 (83%)</div>
               </div>
-              <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                <div class="text-[10px] text-slate-500 dark:text-slate-400">Violations</div>
-                <div class="text-amber-600 dark:text-amber-400 font-bold text-sm">16.7%</div>
+              <div class="p-1.5 rounded bg-slate-50 dark:bg-[#131B2E]">
+                <div class="text-[10px] text-slate-400">Flagged Gaps</div>
+                <div class="text-amber-600 dark:text-amber-400 font-bold" id="ov-chart-gap-val">1 Missing</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Recent Events Feed -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm space-y-3 font-mono text-xs">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <span class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <i data-lucide="shield-alert" class="w-4 h-4 text-red-500"></i>
-              Recent Critical Alerts & Zone Dispatches
+        <!-- Recent Events Ledger -->
+        <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-4 rounded space-y-3 font-mono text-xs">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#182238] pb-2">
+            <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <i data-lucide="activity" class="w-3.5 h-3.5 text-techcyan-500"></i>
+              Real-Time Incident Stream & Telemetry Broadcasts
             </span>
-            <button onclick="navigateTab('incidents')" class="text-brand-600 dark:text-brand-400 hover:underline text-[11px]">View All Incident Records &rarr;</button>
+            <button onclick="navigateTab('incidents')" class="text-techcyan-600 dark:text-techcyan-400 hover:underline text-[11px]">Audit Table &rarr;</button>
           </div>
-          <div id="overview-recent-incidents" class="space-y-2 max-h-56 overflow-y-auto pr-1">
-            <!-- Populated dynamically -->
+          <div id="overview-recent-incidents" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+            <!-- Dynamically populated -->
           </div>
         </div>
 
       </section>
 
       <!-- ================================================================ -->
-      <!-- TAB 2: LIVE MONITORING WORKSPACE                                 -->
+      <!-- TAB 2: LIVE COMPUTER VISION PERCEPTION VIEWPORT                 -->
       <!-- ================================================================ -->
-      <section id="view-monitoring" class="tab-view hidden space-y-6">
+      <section id="view-monitoring" class="tab-view hidden space-y-4">
         
-        <!-- Controls Bar -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-sm font-mono text-xs">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-slate-500 font-semibold uppercase">Camera:</span>
-            <select id="camera-selector" onchange="handleCameraChange(this.value)" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-white focus:outline-none focus:border-brand-500">
-              <option value="sim">CAM-01: High Crane Operations Deck (Simulated Stream)</option>
-              <option value="cam">CAM-02: Device Optical Sensor (Live Camera Ingestion)</option>
+        <!-- Camera Toolbar & Action Triggers -->
+        <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-2.5 rounded flex flex-wrap items-center justify-between gap-2.5 font-mono text-xs select-none">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 uppercase font-semibold text-[11px]">Stream:</span>
+            <select id="camera-selector" onchange="handleCameraChange(this.value)" class="bg-slate-50 dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] rounded px-2.5 py-1 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-techcyan-500 font-mono text-xs">
+              <option value="sim">CAM-01: Overhead Crane Operations Bay (Simulated Stream)</option>
+              <option value="cam">CAM-02: Device Optical Sensor (Live Hardware Camera)</option>
             </select>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="sendToZone('worker')" class="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 font-semibold flex items-center gap-1.5">
-              <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
-              <span>Move Worker to Danger Zone</span>
+            <button onclick="sendToZone('worker')" class="px-2.5 py-1 rounded bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-900/80 text-red-700 dark:text-red-300 font-medium flex items-center gap-1">
+              <i data-lucide="user-x" class="w-3 h-3"></i>
+              <span>Intrude Worker</span>
             </button>
-            <button onclick="sendToZone('box')" class="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 font-semibold flex items-center gap-1.5">
-              <i data-lucide="package" class="w-3.5 h-3.5"></i>
-              <span>Drop Cargo in Danger Zone</span>
+            <button onclick="sendToZone('box')" class="px-2.5 py-1 rounded bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-900/80 text-amber-700 dark:text-amber-300 font-medium flex items-center gap-1">
+              <i data-lucide="package" class="w-3 h-3"></i>
+              <span>Intrude Cargo</span>
             </button>
-            <button onclick="evacuateAll()" class="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1.5">
-              <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+            <button onclick="evacuateAll()" class="px-2.5 py-1 rounded bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-900/80 text-emerald-700 dark:text-emerald-300 font-medium flex items-center gap-1">
+              <i data-lucide="check" class="w-3 h-3"></i>
               <span>Clear Zone</span>
             </button>
           </div>
         </div>
 
-        <!-- Screen & Telemetry Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="lg:col-span-2 space-y-4">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm relative">
+        <!-- Viewport & Control Rail Split Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          
+          <!-- Primary Video / Simulation Canvas HUD -->
+          <div class="lg:col-span-3 space-y-3">
+            <div class="bg-white dark:bg-[#0A0E17] border border-slate-200 dark:border-[#182238] rounded overflow-hidden relative shadow-sm">
               
-              <!-- Video Viewport Header -->
-              <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-500 dark:text-slate-400">
+              <!-- Stream Top Bar -->
+              <div class="px-3 py-1.5 bg-slate-50 dark:bg-[#0E1422] border-b border-slate-200 dark:border-[#182238] flex items-center justify-between text-[11px] font-mono text-slate-500">
                 <div class="flex items-center gap-2">
                   <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                  <span class="font-bold text-slate-800 dark:text-white" id="main-cam-title">CAM-01: High Crane Operations Deck</span>
+                  <span class="font-bold text-slate-800 dark:text-white" id="main-cam-title">CAM-01: OVERHEAD CRANE CELL 04</span>
+                  <span class="text-slate-400">// 1280×720@30FPS</span>
                 </div>
                 <div class="flex items-center gap-3">
-                  <span class="text-brand-600 dark:text-brand-400 font-bold">152.9 FPS TRT</span>
-                  <span class="text-slate-300 dark:text-slate-600">|</span>
-                  <span class="text-slate-600 dark:text-slate-300">6.54 ms [FP16]</span>
+                  <span class="text-techcyan-600 dark:text-techcyan-400 font-semibold" id="hud-model-tag">YOLOv8n-Safety (TensorRT)</span>
+                  <span class="text-slate-300 dark:text-slate-700">|</span>
+                  <span class="text-slate-700 dark:text-slate-300 font-bold" id="hud-fps-tag">152.9 FPS (6.54 ms)</span>
                 </div>
               </div>
 
               <!-- Main Interactive Viewport Canvas -->
-              <div class="relative bg-slate-900 aspect-video flex items-center justify-center overflow-hidden select-none">
-                <canvas id="viewport" width="1280" height="720" class="w-full h-full object-contain cursor-grab active:cursor-grabbing"></canvas>
+              <div class="relative bg-[#070A10] aspect-video flex items-center justify-center overflow-hidden select-none" id="viewport-container">
+                <canvas id="viewport" width="1280" height="720" class="w-full h-full object-contain viewport-canvas"></canvas>
                 
                 <video id="webcam-video" autoplay playsinline muted class="hidden absolute inset-0 w-full h-full object-cover"></video>
                 <canvas id="webcam-overlay" width="1280" height="720" class="hidden absolute inset-0 w-full h-full object-cover pointer-events-none"></canvas>
 
-                <!-- Alarm Overlay Banner -->
-                <div id="alarm-banner" class="hidden absolute top-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-lg bg-red-600 border border-red-400 text-white font-mono font-bold text-xs tracking-wider shadow-lg flex items-center gap-2 z-20">
-                  <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                  <span id="alarm-banner-text">CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE</span>
+                <!-- Zone Alarm Banner -->
+                <div id="alarm-banner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded bg-red-600/95 border border-red-400 text-white font-mono font-bold text-xs tracking-wider shadow-lg flex items-center gap-2 z-20">
+                  <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                  <span id="alarm-banner-text">CRITICAL: OBJECT / PERSONNEL IN RESTRICTED ZONE</span>
                 </div>
 
-                <!-- Manual Instruction Card -->
-                <div class="absolute bottom-3 left-4 bg-slate-900/90 text-slate-200 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-700 text-[11px] font-mono pointer-events-none flex items-center gap-2 z-10">
-                  <i data-lucide="mouse-pointer" class="w-3.5 h-3.5 text-brand-400"></i>
-                  <span><strong>User Control:</strong> Drag any person or object. Or select and steer with <strong>WASD / Arrow Keys</strong>.</span>
+                <!-- Cursor Coordinate Readout -->
+                <div class="absolute bottom-2.5 right-3 bg-black/80 text-techcyan-400 font-mono text-[10px] px-2 py-0.5 rounded border border-slate-800 pointer-events-none z-10" id="hud-coords-readout">
+                  X: 0px | Y: 0px
+                </div>
+
+                <!-- Operator Directional Instruction Badge -->
+                <div class="absolute bottom-2.5 left-3 bg-black/80 text-slate-300 font-mono text-[10px] px-2 py-0.5 rounded border border-slate-800 pointer-events-none z-10 hidden sm:flex items-center gap-1.5">
+                  <i data-lucide="mouse-pointer" class="w-3 h-3 text-techcyan-400"></i>
+                  <span>Drag entity, click floor to walk, or use <strong class="text-white">[W][A][S][D]</strong></span>
                 </div>
               </div>
             </div>
 
-            <!-- Entities Selector Grid -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3 font-mono">
-              <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between">
-                <span>Select Entity to Steer & Configure</span>
-                <span>Active: <strong class="text-brand-600 dark:text-brand-400" id="kpi-selected-mon">Worker-A</strong></span>
+            <!-- Entities Steer Selector Deck -->
+            <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3 rounded space-y-2 font-mono">
+              <div class="text-[11px] font-semibold uppercase text-slate-400 flex items-center justify-between">
+                <span>Select Entity to Steer & Inspect</span>
+                <span>Active Target: <strong class="text-techcyan-600 dark:text-techcyan-400 font-bold" id="kpi-selected-mon">Worker-A</strong></span>
               </div>
-              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3" id="object-selector-cards">
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="object-selector-cards">
                 <!-- Dynamically populated -->
               </div>
             </div>
           </div>
 
-          <!-- Real-Time MQTT Telemetry Stream Panel -->
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col h-[650px] font-mono text-xs">
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
-              <div class="flex items-center gap-2">
-                <i data-lucide="radio" class="w-4 h-4 text-brand-500"></i>
-                <h3 class="font-bold text-sm text-slate-900 dark:text-white">MQTT Telemetry Stream</h3>
+          <!-- Right Docked Telemetry & Inspector Rail -->
+          <div class="space-y-3 font-mono text-xs">
+            
+            <!-- Entity Inspector Card -->
+            <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3 rounded space-y-2">
+              <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#182238] pb-1.5">
+                <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <i data-lucide="info" class="w-3.5 h-3.5 text-techcyan-500"></i>
+                  Active Inspector
+                </span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-300" id="insp-id-tag">#101</span>
               </div>
-              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-bold">LIVE</span>
+
+              <div class="space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <div class="flex justify-between"><span>Classification:</span><strong class="text-slate-800 dark:text-slate-100" id="insp-class">Person</strong></div>
+                <div class="flex justify-between"><span>Floor Coords:</span><strong class="text-slate-800 dark:text-slate-100" id="insp-coords">X:220, Y:400</strong></div>
+                <div class="flex justify-between"><span>Hazard Distance:</span><strong id="insp-distance" class="text-emerald-600 dark:text-emerald-400">> 15.0m (Safe)</strong></div>
+                <div class="flex justify-between"><span>Confidence:</span><strong class="text-slate-800 dark:text-slate-100" id="insp-conf">0.96 (YOLOv8)</strong></div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-100 dark:border-[#182238]" id="insp-ppe-controls">
+                <div class="text-[10px] text-slate-400 uppercase font-semibold mb-1">Equipment Verification:</div>
+                <div class="grid grid-cols-2 gap-1.5 text-[10px]" id="insp-ppe-toggles">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
             </div>
 
-            <div class="flex justify-between items-center text-[10px] text-slate-400 mb-2">
-              <span>TOPIC: <code class="text-brand-600 dark:text-brand-400 font-semibold">safety/alerts</code></span>
-              <button onclick="clearIncidentLogs()" class="hover:text-slate-700 dark:hover:text-slate-200">Clear</button>
+            <!-- MQTT Dispatched Packets Rail -->
+            <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3 rounded flex flex-col h-[380px]">
+              <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#182238] pb-1.5 mb-2">
+                <div class="flex items-center gap-1.5">
+                  <i data-lucide="radio" class="w-3.5 h-3.5 text-techcyan-500"></i>
+                  <span class="font-bold text-slate-900 dark:text-white">MQTT Dispatch Feed</span>
+                </div>
+                <button onclick="clearIncidentLogs()" class="text-[10px] text-slate-400 hover:text-slate-200">Clear</button>
+              </div>
+
+              <div class="text-[10px] text-slate-400 mb-1 flex justify-between">
+                <span>Topic: <code class="text-techcyan-600 dark:text-techcyan-400 font-semibold">safety/alerts</code></span>
+                <span class="text-emerald-600 dark:text-emerald-400">QoS 1</span>
+              </div>
+
+              <div id="incident-feed" class="flex-1 overflow-y-auto space-y-1.5 pr-1">
+                <!-- Dynamically populated -->
+              </div>
             </div>
 
-            <div id="incident-feed" class="flex-1 overflow-y-auto space-y-2 pr-1">
-              <!-- Dynamically populated telemetry items -->
-            </div>
-
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-              <span>Broker: broker.hivemq.com</span>
-              <span class="text-emerald-600 dark:text-emerald-400 font-bold">QoS 1 Verified</span>
-            </div>
           </div>
+
         </div>
       </section>
 
       <!-- ================================================================ -->
-      <!-- TAB 3: WORKER TRACKING WORKSPACE                                 -->
+      <!-- TAB 3: SPATIAL MULTI-OBJECT TRACKING MATRIX                    -->
       <!-- ================================================================ -->
-      <section id="view-tracking" class="tab-view hidden space-y-6">
-        <div class="flex items-center justify-between">
+      <section id="view-tracking" class="tab-view hidden space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-[#161F33] pb-3">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
-              <i data-lucide="users" class="w-5 h-5 text-brand-500"></i>
-              Persistent Multi-Object Tracking
+            <h2 class="text-base font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
+              <i data-lucide="crosshair" class="w-4 h-4 text-techcyan-500"></i>
+              DEEPSTREAM NvDCF MULTI-OBJECT SPATIAL TRACKING
             </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">DeepStream NvDCF persistent IDs maintaining identity through occlusions.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Persistent trajectory tracking across occlusions with visual correlation and Kalman spatial prediction.</p>
           </div>
-          <span class="px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700">4 Monitored Entities</span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#182238]">Refresh Rate: 30 Hz</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="worker-tracking-cards">
-          <!-- Dynamically populated worker cards -->
+        <!-- Entity Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3" id="worker-tracking-cards">
+          <!-- Dynamically populated -->
         </div>
 
-        <!-- Coordinates Matrix Table -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
-          <div class="flex items-center justify-between font-mono text-xs border-b border-slate-100 dark:border-slate-800 pb-3">
-            <span class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <i data-lucide="compass" class="w-4 h-4 text-brand-500"></i>
-              Spatial Trajectory Matrix (30 Hz Sensor Refresh)
-            </span>
-            <span class="text-slate-400">Coordinate Origin: Top-Left (0,0)</span>
+        <!-- Spatial Telemetry Coordinates Table -->
+        <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] rounded overflow-hidden font-mono text-xs">
+          <div class="p-3 border-b border-slate-100 dark:border-[#182238] flex items-center justify-between">
+            <span class="font-bold text-slate-900 dark:text-white">Spatial Coordinate & Tracking Matrix</span>
+            <span class="text-slate-400 text-[10px]">Coordinate Origin: Top-Left (0, 0)</span>
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full text-left font-mono text-xs text-slate-700 dark:text-slate-300">
-              <thead class="bg-slate-50 dark:bg-slate-800/60 text-[10px] uppercase text-slate-400 border-b border-slate-200 dark:border-slate-700">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 dark:bg-[#131B2E] text-[10px] uppercase text-slate-400 border-b border-slate-200 dark:border-[#182238]">
                 <tr>
-                  <th class="p-3">Track ID</th>
-                  <th class="p-3">Entity Type</th>
-                  <th class="p-3">Coordinates (X, Y)</th>
-                  <th class="p-3">Hazard Proximity</th>
-                  <th class="p-3">PPE Compliance</th>
-                  <th class="p-3">Status</th>
+                  <th class="p-2.5">Track ID</th>
+                  <th class="p-2.5">Entity Label</th>
+                  <th class="p-2.5">Class</th>
+                  <th class="p-2.5">Coordinates (X, Y)</th>
+                  <th class="p-2.5">Hazard Distance</th>
+                  <th class="p-2.5">PPE Status</th>
+                  <th class="p-2.5">Status</th>
+                  <th class="p-2.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800" id="worker-tracking-table">
+              <tbody class="divide-y divide-slate-100 dark:divide-[#182238]" id="worker-tracking-table">
                 <!-- Dynamically populated -->
               </tbody>
             </table>
@@ -514,188 +635,203 @@
       </section>
 
       <!-- ================================================================ -->
-      <!-- TAB 4: PPE COMPLIANCE WORKSPACE                                  -->
+      <!-- TAB 4: PERSONAL PROTECTIVE EQUIPMENT (PPE) VERIFICATION         -->
       <!-- ================================================================ -->
-      <section id="view-ppe" class="tab-view hidden space-y-6">
-        <div class="flex items-center justify-between">
+      <section id="view-ppe" class="tab-view hidden space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-[#161F33] pb-3">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
-              <i data-lucide="hard-hat" class="w-5 h-5 text-amber-500"></i>
-              Personal Protective Equipment (PPE) Compliance
+            <h2 class="text-base font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
+              <i data-lucide="hard-hat" class="w-4 h-4 text-amber-500"></i>
+              OSHA / ISO-45001 PERSONAL PROTECTIVE EQUIPMENT ENFORCEMENT
             </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Automated detection of helmets and safety vests using YOLOv8 bounding containment.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Automated visual containment verification for certified hardhats and high-visibility reflective vests.</p>
           </div>
-          <span class="px-3 py-1 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold border border-emerald-200 dark:border-emerald-800">Shift Score: 83.3%</span>
+          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">Site Compliance: 83.3%</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm space-y-3">
-            <div class="flex justify-between items-center">
-              <span class="font-mono text-xs text-amber-600 dark:text-amber-400 font-bold uppercase flex items-center gap-1.5">
-                <i data-lucide="hard-hat" class="w-4 h-4"></i>
-                Certified Hardhats
-              </span>
-              <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">Mandatory</span>
+        <!-- 3 KPI Category Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono">
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3.5 rounded space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-amber-600 dark:text-amber-400 uppercase">Certified Hardhats</span>
+              <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/40">Mandatory</span>
             </div>
-            <div class="text-3xl font-bold font-mono text-slate-900 dark:text-white" id="ppe-hardhat-rate">66.7%</div>
-            <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div class="h-full bg-amber-500 rounded-full" style="width: 66.7%;"></div>
+            <div class="text-2xl font-bold text-slate-900 dark:text-white" id="ppe-hardhat-rate">66.7%</div>
+            <div class="w-full h-1 bg-slate-100 dark:bg-[#182238] rounded overflow-hidden">
+              <div class="h-full bg-amber-500 rounded" style="width: 66.7%;"></div>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">1 worker flagged: Worker-B lacking helmet.</p>
+            <div class="text-[10px] text-slate-400">1 violation flagged: Worker-B missing hardhat</div>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm space-y-3">
-            <div class="flex justify-between items-center">
-              <span class="font-mono text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase flex items-center gap-1.5">
-                <i data-lucide="shirt" class="w-4 h-4"></i>
-                High-Vis Safety Vests
-              </span>
-              <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">Mandatory</span>
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3.5 rounded space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-emerald-600 dark:text-emerald-400 uppercase">High-Vis Reflective Vests</span>
+              <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/40">Mandatory</span>
             </div>
-            <div class="text-3xl font-bold font-mono text-slate-900 dark:text-white" id="ppe-vest-rate">66.7%</div>
-            <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div class="h-full bg-emerald-500 rounded-full" style="width: 66.7%;"></div>
+            <div class="text-2xl font-bold text-slate-900 dark:text-white" id="ppe-vest-rate">66.7%</div>
+            <div class="w-full h-1 bg-slate-100 dark:bg-[#182238] rounded overflow-hidden">
+              <div class="h-full bg-emerald-500 rounded" style="width: 66.7%;"></div>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">1 worker flagged: Worker-C lacking reflective vest.</p>
+            <div class="text-[10px] text-slate-400">1 violation flagged: Worker-C missing reflective vest</div>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm space-y-3">
-            <div class="flex justify-between items-center">
-              <span class="font-mono text-xs text-brand-600 dark:text-brand-400 font-bold uppercase flex items-center gap-1.5">
-                <i data-lucide="check-circle" class="w-4 h-4"></i>
-                Overall Safety Grade
-              </span>
-              <span class="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-800">Grade A-</span>
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-3.5 rounded space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-techcyan-600 dark:text-techcyan-400 uppercase">Composite Site Rating</span>
+              <span class="text-[10px] text-techcyan-600 dark:text-techcyan-400 font-bold px-1.5 py-0.2 rounded bg-techcyan-50 dark:bg-techcyan-950">Grade A-</span>
             </div>
-            <div class="text-3xl font-bold font-mono text-slate-900 dark:text-white">83.3 / 100</div>
-            <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div class="h-full bg-brand-500 rounded-full" style="width: 83.3%;"></div>
+            <div class="text-2xl font-bold text-slate-900 dark:text-white">83.3 / 100</div>
+            <div class="w-full h-1 bg-slate-100 dark:bg-[#182238] rounded overflow-hidden">
+              <div class="h-full bg-techcyan-500 rounded" style="width: 83.3%;"></div>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">Real-time edge verification with zero missed detections.</p>
+            <div class="text-[10px] text-slate-400">Calculated from 6 mandatory safety points</div>
           </div>
         </div>
 
-        <!-- Interactive PPE State Override Controls -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4 font-mono">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 text-xs">
-            <span class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <i data-lucide="sliders" class="w-4 h-4 text-brand-500"></i>
-              Live Worker Equipment Override Controls
+        <!-- Interactive PPE Override Switches -->
+        <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-4 rounded space-y-3 font-mono">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#182238] pb-2 text-xs">
+            <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <i data-lucide="sliders" class="w-3.5 h-3.5 text-techcyan-500"></i>
+              Live Worker Equipment Override Switches
             </span>
-            <span class="text-slate-400">Toggle equipment to test compliance gating</span>
+            <span class="text-slate-400 text-[10px]">Toggle gear states to test compliance gating & alarms</span>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="ppe-interactive-toggles">
-            <!-- Dynamically populated -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="ppe-interactive-toggles">
+            <!-- Populated dynamically -->
           </div>
         </div>
       </section>
 
       <!-- ================================================================ -->
-      <!-- TAB 5: HAZARD ZONES WORKSPACE                                    -->
+      <!-- TAB 5: GEOFENCE HAZARD ZONES & 2D BLUEPRINT                     -->
       <!-- ================================================================ -->
-      <section id="view-zones" class="tab-view hidden space-y-6">
-        <div class="flex items-center justify-between">
+      <section id="view-zones" class="tab-view hidden space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-[#161F33] pb-3">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
-              <i data-lucide="alert-octagon" class="w-5 h-5 text-amber-500"></i>
-              Hazard Geofencing & Restricted Areas
+            <h2 class="text-base font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
+              <i data-lucide="octagon" class="w-4 h-4 text-amber-500"></i>
+              HAZARD GEOFENCING & EXCLUSION BOUNDARIES
             </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Polygon boundary coordinates evaluated against object locations.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Ray-casting polygon containment evaluation running at 30 Hz against all active entity footprints.</p>
           </div>
-          <button onclick="evacuateAll()" class="px-3.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-mono text-xs font-semibold">
-            Clear All Entities to Safe
+          <button onclick="evacuateAll()" class="px-3 py-1 rounded bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-mono text-xs font-semibold">
+            Clear Zone (Reset Positions)
           </button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm space-y-4 font-mono text-xs">
-            <h3 class="font-bold text-slate-900 dark:text-white text-sm border-b border-slate-100 dark:border-slate-800 pb-2">
-              Zone 01: High Crane Operations Deck
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          
+          <!-- Parameters Card -->
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-4 rounded space-y-3 font-mono text-xs">
+            <h3 class="font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-[#182238] pb-1.5">
+              Zone 01 Parameters: Heavy Crane Operations Cell
             </h3>
 
-            <div class="space-y-2.5 text-slate-600 dark:text-slate-300">
-              <div class="flex justify-between"><span>Classification:</span><span class="text-red-600 dark:text-red-400 font-bold">RESTRICTED EXCLUSION</span></div>
-              <div class="flex justify-between"><span>Interlock Response:</span><span>MQTT Siren + Emergency Stop</span></div>
-              <div class="flex justify-between"><span>Encroachment Threshold:</span><span>Instantaneous (0s)</span></div>
-              <div class="flex justify-between"><span>Target Classes:</span><span>Humans, Vehicles, Foreign Objects</span></div>
-              <div class="flex justify-between"><span>Active Incursions:</span><span class="text-red-600 dark:text-red-400 font-bold" id="zones-active-incursions">0</span></div>
+            <div class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300">
+              <div class="flex justify-between"><span>Zone Classification:</span><strong class="text-red-600 dark:text-red-400">CRITICAL EXCLUSION</strong></div>
+              <div class="flex justify-between"><span>Encroachment Threshold:</span><strong>Instantaneous (0s)</strong></div>
+              <div class="flex justify-between"><span>Target Classes:</span><strong>All (Humans, Forklifts, Pallets)</strong></div>
+              <div class="flex justify-between"><span>Safety Interlock:</span><strong class="text-emerald-600 dark:text-emerald-400">MQTT Emergency Alarm</strong></div>
+              <div class="flex justify-between"><span>Active Incursions:</span><strong class="text-red-600 dark:text-red-400" id="zones-active-incursions">0</strong></div>
             </div>
 
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
-              <label class="block text-slate-500 mb-1">Safety Buffer Radius:</label>
-              <input type="range" min="0" max="100" value="25" class="w-full accent-brand-500">
-              <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+            <div class="pt-2 border-t border-slate-100 dark:border-[#182238] space-y-1">
+              <div class="flex justify-between text-[11px] text-slate-500">
+                <span>Buffer Margin Distance:</span>
+                <span class="font-bold text-slate-900 dark:text-white" id="buffer-val-label">25 cm</span>
+              </div>
+              <input type="range" min="0" max="50" value="25" class="w-full accent-techcyan-500" oninput="document.getElementById('buffer-val-label').innerText = this.value + ' cm'">
+              <div class="flex justify-between text-[9px] text-slate-400">
                 <span>0 cm (Strict)</span>
                 <span>25 cm (Nominal)</span>
-                <span>50 cm (Buffer)</span>
+                <span>50 cm (Conservative)</span>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 dark:border-[#182238] space-y-1 text-[10px] text-slate-400">
+              <div class="font-semibold text-slate-500 uppercase">Polygon Vertices (Pixel Space):</div>
+              <div class="grid grid-cols-2 gap-1 font-mono">
+                <div>V1: (500, 180)</div>
+                <div>V2: (1120, 180)</div>
+                <div>V3: (1120, 640)</div>
+                <div>V4: (500, 640)</div>
               </div>
             </div>
           </div>
 
-          <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm space-y-3 font-mono text-xs">
-            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
-              <span class="font-bold text-slate-900 dark:text-white">2D Blueprint Floor Plan Overlay</span>
-              <span class="text-slate-400">Scale: 1px = 1.5mm</span>
+          <!-- 2D Blueprint Floor Plan View -->
+          <div class="lg:col-span-2 bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-4 rounded space-y-2 font-mono text-xs">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#182238] pb-1.5">
+              <span class="font-bold text-slate-900 dark:text-white">2D Blueprint Floor Plan Projection</span>
+              <span class="text-slate-400 text-[10px]">Scale: 1px = 1.5mm | Coordinate Grid: 30px</span>
             </div>
-            <div class="bg-slate-900 rounded-lg p-3 aspect-[16/9] flex items-center justify-center">
+            <div class="bg-[#070A10] rounded p-2 aspect-[16/9] flex items-center justify-center">
               <canvas id="zone-map-canvas" width="640" height="360" class="w-full h-full object-contain"></canvas>
             </div>
           </div>
+
         </div>
       </section>
 
       <!-- ================================================================ -->
-      <!-- TAB 6: INCIDENT LOGS TABLE                                       -->
+      <!-- TAB 6: INCIDENT LOGS & AUDIT TRAIL                              -->
       <!-- ================================================================ -->
-      <section id="view-incidents" class="tab-view hidden space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section id="view-incidents" class="tab-view hidden space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-[#161F33] pb-3">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
-              <i data-lucide="file-text" class="w-5 h-5 text-red-500"></i>
-              Incident Management & Audit Trails
+            <h2 class="text-base font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
+              <i data-lucide="clipboard-list" class="w-4 h-4 text-techcyan-500"></i>
+              SAFETY INCIDENT AUDIT LEDGER
             </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filterable database exported to <code class="text-brand-600 dark:text-brand-400 font-semibold">incident_log.jsonl</code>.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filterable event database matching schema exported to <code class="text-techcyan-600 dark:text-techcyan-400 font-semibold">incident_log.jsonl</code>.</p>
           </div>
-          <button onclick="exportJSONL()" class="px-3.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs font-mono font-semibold flex items-center gap-1.5 shadow-sm">
-            <i data-lucide="download" class="w-3.5 h-3.5 text-brand-500"></i>
-            <span>Export incident_log.jsonl</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="exportJSONL()" class="px-3 py-1.5 rounded bg-white dark:bg-[#0E1422] hover:bg-slate-50 dark:hover:bg-[#131B2E] border border-slate-200 dark:border-[#182238] text-slate-800 dark:text-white text-xs font-mono font-medium flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-techcyan-500"></i>
+              <span>Export JSONL</span>
+            </button>
+            <button onclick="clearIncidentLogs()" class="px-3 py-1.5 rounded bg-slate-100 dark:bg-[#131B2E] hover:bg-slate-200 text-slate-600 dark:text-slate-300 text-xs font-mono font-medium">
+              Clear All
+            </button>
+          </div>
         </div>
 
-        <!-- Filters Bar -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl flex flex-wrap items-center justify-between gap-3 font-mono text-xs shadow-sm">
-          <div class="flex-1 min-w-[220px] relative">
-            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="incident-search" oninput="filterIncidents()" placeholder="Search target, event type, camera..." 
-                   class="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-brand-500">
+        <!-- Filter Controls Strip -->
+        <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] p-2.5 rounded flex flex-wrap items-center justify-between gap-2.5 font-mono text-xs">
+          <div class="flex-1 min-w-[200px] relative">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="incident-search" oninput="filterIncidents()" placeholder="Filter by entity, event type, camera..." 
+                   class="w-full pl-8 pr-3 py-1 bg-slate-50 dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] rounded text-slate-800 dark:text-slate-200 placeholder-slate-400 text-xs focus:outline-none focus:border-techcyan-500 font-mono">
           </div>
 
           <div class="flex items-center gap-2">
-            <select id="severity-filter" onchange="filterIncidents()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-white focus:outline-none focus:border-brand-500">
+            <select id="severity-filter" onchange="filterIncidents()" class="bg-slate-50 dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] rounded px-2.5 py-1 text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:border-techcyan-500 font-mono">
               <option value="ALL">All Severities</option>
               <option value="CRITICAL">Critical Only</option>
               <option value="WARNING">Warnings Only</option>
+              <option value="SAFE">Safe / Clear Only</option>
             </select>
           </div>
         </div>
 
-        <!-- Incidents Table -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden font-mono text-xs shadow-sm">
+        <!-- Audit Table -->
+        <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] rounded overflow-hidden font-mono text-xs shadow-sm">
           <div class="overflow-x-auto">
             <table class="w-full text-left">
-              <thead class="bg-slate-50 dark:bg-slate-800/60 text-[10px] uppercase text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <thead class="bg-slate-50 dark:bg-[#131B2E] text-[10px] uppercase text-slate-400 border-b border-slate-200 dark:border-[#182238]">
                 <tr>
-                  <th class="p-3">Timestamp (UTC)</th>
-                  <th class="p-3">Target Entity</th>
-                  <th class="p-3">Incident Type</th>
-                  <th class="p-3">Severity</th>
-                  <th class="p-3">Camera</th>
-                  <th class="p-3">Action</th>
-                  <th class="p-3">Metadata</th>
+                  <th class="p-2.5 cursor-pointer hover:text-slate-200" onclick="sortIncidents('timestamp')">Timestamp (UTC) ↕</th>
+                  <th class="p-2.5">Target Entity</th>
+                  <th class="p-2.5">Incident Code</th>
+                  <th class="p-2.5 cursor-pointer hover:text-slate-200" onclick="sortIncidents('severity')">Severity ↕</th>
+                  <th class="p-2.5">Camera Sensor</th>
+                  <th class="p-2.5">Interlock Action</th>
+                  <th class="p-2.5 text-right">Inspection</th>
                 </tr>
               </thead>
-              <tbody id="incidents-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+              <tbody id="incidents-table-body" class="divide-y divide-slate-100 dark:divide-[#182238] text-slate-700 dark:text-slate-300">
                 <!-- Dynamically populated -->
               </tbody>
             </table>
@@ -703,128 +839,129 @@
         </div>
 
         <!-- JSON Modal Dialog -->
-        <div id="json-modal" class="hidden fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-lg w-full p-5 space-y-4 font-mono text-xs shadow-xl">
-            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+        <div id="json-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#1E293B] rounded max-w-xl w-full p-4 space-y-3 font-mono text-xs shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#182238] pb-2">
               <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <i data-lucide="code" class="w-4 h-4 text-brand-500"></i>
-                Structured Incident Metadata (JSON)
+                <i data-lucide="code" class="w-4 h-4 text-techcyan-500"></i>
+                Structured Event JSON Payload (MQTT QoS 1)
               </span>
-              <button onclick="closeJSONModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">&times;</button>
+              <button onclick="closeJSONModal()" class="text-slate-400 hover:text-white text-base">&times;</button>
             </div>
-            <pre id="json-modal-content" class="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 overflow-x-auto text-[11px]"></pre>
-            <div class="flex justify-end">
-              <button onclick="closeJSONModal()" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-white rounded-lg">Close</button>
+            <pre id="json-modal-content" class="bg-slate-50 dark:bg-[#070A10] p-3 rounded border border-slate-200 dark:border-[#182238] text-emerald-600 dark:text-emerald-400 overflow-x-auto text-[11px] max-h-80"></pre>
+            <div class="flex justify-end gap-2">
+              <button onclick="navigator.clipboard.writeText(document.getElementById('json-modal-content').innerText); alert('JSON copied to clipboard');" class="px-3 py-1 bg-slate-100 dark:bg-[#131B2E] hover:bg-slate-200 text-slate-800 dark:text-white rounded">Copy Payload</button>
+              <button onclick="closeJSONModal()" class="px-3 py-1 bg-techcyan-600 hover:bg-techcyan-700 text-white rounded">Close</button>
             </div>
           </div>
         </div>
       </section>
 
       <!-- ================================================================ -->
-      <!-- TAB 7: PIPELINE ANALYTICS                                        -->
+      <!-- TAB 7: PIPELINE ENGINE & HARDWARE BENCHMARKS                    -->
       <!-- ================================================================ -->
-      <section id="view-pipeline" class="tab-view hidden space-y-6">
-        <div class="flex items-center justify-between">
+      <section id="view-pipeline" class="tab-view hidden space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-[#161F33] pb-3">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
-              <i data-lucide="cpu" class="w-5 h-5 text-brand-500"></i>
-              CraftifAI PipeGen 5-Stage Acceleration
+            <h2 class="text-base font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
+              <i data-lucide="cpu" class="w-4 h-4 text-techcyan-500"></i>
+              CRAFTIFAI PIPEGEN 5-STAGE ACCELERATION ENGINE
             </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Execution benchmark on NVIDIA GeForce RTX 4050 Laptop GPU (Ada Lovelace).</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Execution benchmark on NVIDIA GeForce RTX 4050 Laptop GPU (Ada Lovelace, 6GB VRAM, TensorRT FP16).</p>
           </div>
-          <span class="px-3 py-1 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold border border-emerald-200 dark:border-emerald-800">152.9 FPS • 6.54 ms</span>
+          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">152.9 FPS • 6.54 ms</span>
         </div>
 
         <!-- 5 Pipeline Stages Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 font-mono text-xs">
-          <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5 shadow-sm">
-            <div class="text-brand-600 dark:text-brand-400 font-bold flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded bg-brand-50 dark:bg-brand-950 flex items-center justify-center text-[10px]">1</span>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-2.5 font-mono text-xs">
+          <div class="p-3 rounded bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] space-y-1">
+            <div class="text-techcyan-600 dark:text-techcyan-400 font-bold flex items-center gap-1.5">
+              <span class="w-4 h-4 rounded bg-techcyan-50 dark:bg-techcyan-950 flex items-center justify-center text-[10px]">1</span>
               Requirement
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Prompt defining hazard zones, PPE constraints & camera source.</p>
-            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">✓ 01_requirement.json</div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Natural language specification of hazard zones & camera sources.</p>
+            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">✓ 01_requirement.json</div>
           </div>
 
-          <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5 shadow-sm">
+          <div class="p-3 rounded bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] space-y-1">
             <div class="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-[10px]">2</span>
+              <span class="w-4 h-4 rounded bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-[10px]">2</span>
               Pipeline IR
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">8-Node DAG routing decode, preprocessing, inference & MQTT sinks.</p>
-            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">✓ 02_pipeline_ir.json</div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">8-node DAG routing decode, inference, tracker & MQTT sinks.</p>
+            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">✓ 02_pipeline_ir.json</div>
           </div>
 
-          <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5 shadow-sm">
-            <div class="text-pink-600 dark:text-pink-400 font-bold flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded bg-pink-50 dark:bg-pink-950 flex items-center justify-center text-[10px]">3</span>
+          <div class="p-3 rounded bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] space-y-1">
+            <div class="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1.5">
+              <span class="w-4 h-4 rounded bg-purple-50 dark:bg-purple-950 flex items-center justify-center text-[10px]">3</span>
               Model Config
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">YOLOv8 Nano (3.15M params) exported to ONNX (1x3x640x640).</p>
-            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">✓ yolov8n_safety.onnx</div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">YOLOv8 Nano (3.15M params) exported to ONNX (1×3×640×640).</p>
+            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">✓ yolov8n_safety.onnx</div>
           </div>
 
-          <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5 shadow-sm">
+          <div class="p-3 rounded bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] space-y-1">
             <div class="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded bg-amber-50 dark:bg-amber-950 flex items-center justify-center text-[10px]">4</span>
+              <span class="w-4 h-4 rounded bg-amber-50 dark:bg-amber-950 flex items-center justify-center text-[10px]">4</span>
               TensorRT Compiler
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Compiled to FP16 Tensor Cores. 6.54ms latency (4.7x speedup).</p>
-            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">✓ yolov8n_safety_fp16.engine</div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Compiled to FP16 Tensor Cores. 6.54ms latency (4.7x speedup).</p>
+            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">✓ yolov8n_fp16.engine</div>
           </div>
 
-          <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5 shadow-sm">
+          <div class="p-3 rounded bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] space-y-1">
             <div class="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-[10px]">5</span>
+              <span class="w-4 h-4 rounded bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-[10px]">5</span>
               Live Action Run
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">DeepStream loop emitting MQTT alarms & appending JSON audit logs.</p>
-            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">✓ incident_log.jsonl</div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">DeepStream loop emitting MQTT alarms & appending JSON audit logs.</p>
+            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">✓ incident_log.jsonl</div>
           </div>
         </div>
 
         <!-- Benchmark Comparison Table -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-3 font-mono text-xs">
-          <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
-            <span class="font-bold text-slate-900 dark:text-white">Execution Provider Benchmarks (RTX 4050 6GB)</span>
-            <span class="text-brand-600 dark:text-brand-400 font-semibold">Input: 1x3x640x640</span>
+        <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] rounded p-4 space-y-3 font-mono text-xs">
+          <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#182238] pb-1.5">
+            <span class="font-bold text-slate-900 dark:text-white">Execution Provider Benchmarks (NVIDIA GeForce RTX 4050 6GB)</span>
+            <span class="text-techcyan-600 dark:text-techcyan-400 font-semibold">Input: 1×3×640×640 FP16</span>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-left">
-              <thead class="bg-slate-50 dark:bg-slate-800/60 text-[10px] uppercase text-slate-400 border-b border-slate-200 dark:border-slate-700">
+              <thead class="bg-slate-50 dark:bg-[#131B2E] text-[10px] uppercase text-slate-400 border-b border-slate-200 dark:border-[#182238]">
                 <tr>
-                  <th class="p-3">Execution Engine</th>
-                  <th class="p-3">Precision</th>
-                  <th class="p-3">Mean Latency</th>
-                  <th class="p-3">Throughput (FPS)</th>
-                  <th class="p-3">Speedup</th>
+                  <th class="p-2.5">Execution Provider</th>
+                  <th class="p-2.5">Precision</th>
+                  <th class="p-2.5">Mean Latency</th>
+                  <th class="p-2.5">Throughput (FPS)</th>
+                  <th class="p-2.5">Speedup Factor</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+              <tbody class="divide-y divide-slate-100 dark:divide-[#182238] text-slate-700 dark:text-slate-300">
                 <tr>
-                  <td class="p-3 font-semibold text-slate-500">Host CPU Baseline</td>
-                  <td class="p-3">FP32</td>
-                  <td class="p-3">30.74 ms</td>
-                  <td class="p-3 font-bold text-slate-500">32.5 FPS</td>
-                  <td class="p-3 text-slate-400">1.0x (Baseline)</td>
+                  <td class="p-2.5 text-slate-500 font-semibold">Host CPU Baseline</td>
+                  <td class="p-2.5">FP32</td>
+                  <td class="p-2.5">30.74 ms</td>
+                  <td class="p-2.5 font-bold text-slate-500">32.5 FPS</td>
+                  <td class="p-2.5 text-slate-400">1.0x (Baseline)</td>
                 </tr>
                 <tr>
-                  <td class="p-3 font-semibold text-brand-600 dark:text-brand-400">NVIDIA CUDA Core</td>
-                  <td class="p-3">FP32</td>
-                  <td class="p-3">13.36 ms</td>
-                  <td class="p-3 font-bold text-brand-600 dark:text-brand-400">74.9 FPS</td>
-                  <td class="p-3 text-brand-600 dark:text-brand-400">2.3x Speedup</td>
+                  <td class="p-2.5 text-techcyan-600 dark:text-techcyan-400 font-semibold">NVIDIA CUDA Core</td>
+                  <td class="p-2.5">FP32</td>
+                  <td class="p-2.5">13.36 ms</td>
+                  <td class="p-2.5 font-bold text-techcyan-600 dark:text-techcyan-400">74.9 FPS</td>
+                  <td class="p-2.5 text-techcyan-600 dark:text-techcyan-400">2.3x Speedup</td>
                 </tr>
-                <tr class="bg-emerald-50/50 dark:bg-emerald-950/20">
-                  <td class="p-3 font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-indicator"></span>
-                    TensorRT FP16 Engine
+                <tr class="bg-emerald-50/60 dark:bg-emerald-950/20">
+                  <td class="p-2.5 font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 tactical-pulse"></span>
+                    TensorRT FP16 Engine (Ada Tensor Cores)
                   </td>
-                  <td class="p-3 text-emerald-700 dark:text-emerald-300 font-bold">FP16 (Tensor Cores)</td>
-                  <td class="p-3 text-emerald-700 dark:text-emerald-400 font-bold">6.54 ms</td>
-                  <td class="p-3 text-emerald-700 dark:text-emerald-400 font-bold text-sm">152.9 FPS</td>
-                  <td class="p-3 text-emerald-700 dark:text-emerald-400 font-bold">4.7x Speedup (Optimal)</td>
+                  <td class="p-2.5 text-emerald-700 dark:text-emerald-300 font-bold">FP16</td>
+                  <td class="p-2.5 text-emerald-700 dark:text-emerald-400 font-bold">6.54 ms</td>
+                  <td class="p-2.5 text-emerald-700 dark:text-emerald-400 font-bold">152.9 FPS</td>
+                  <td class="p-2.5 text-emerald-700 dark:text-emerald-400 font-bold">4.7x Speedup (Optimal)</td>
                 </tr>
               </tbody>
             </table>
@@ -836,16 +973,142 @@
   </div>
 
   <!-- ==================================================================== -->
-  <!-- JAVASCRIPT APPLICATION LOGIC                                        -->
+  <!-- SHORTCUTS CHEAT SHEET MODAL                                          -->
+  <!-- ==================================================================== -->
+  <div id="shortcuts-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none">
+    <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#1E293B] rounded max-w-md w-full p-4 space-y-3 font-mono text-xs shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#182238] pb-2">
+        <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+          <i data-lucide="keyboard" class="w-4 h-4 text-techcyan-500"></i>
+          Operator Keyboard Shortcuts
+        </span>
+        <button onclick="closeShortcutsModal()" class="text-slate-400 hover:text-white text-base">&times;</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-[11px]">
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#070A10] border border-slate-200 dark:border-[#182238] flex justify-between">
+          <span>Navigate Views</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-[10px] font-bold">1 - 6</kbd>
+        </div>
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#070A10] border border-slate-200 dark:border-[#182238] flex justify-between">
+          <span>Steer Entity</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-[10px] font-bold">W A S D / ↑←↓→</kbd>
+        </div>
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#070A10] border border-slate-200 dark:border-[#182238] flex justify-between">
+          <span>Cycle Entity</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-[10px] font-bold">Tab</kbd>
+        </div>
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#070A10] border border-slate-200 dark:border-[#182238] flex justify-between">
+          <span>Toggle Theme</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-[10px] font-bold">T</kbd>
+        </div>
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#070A10] border border-slate-200 dark:border-[#182238] flex justify-between">
+          <span>Toggle Siren</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-[10px] font-bold">M</kbd>
+        </div>
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#070A10] border border-slate-200 dark:border-[#182238] flex justify-between">
+          <span>Switch Camera</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-[10px] font-bold">C</kbd>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-1">
+        <button onclick="closeShortcutsModal()" class="px-3 py-1 bg-techcyan-600 hover:bg-techcyan-700 text-white rounded text-xs font-semibold">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- APPLICATION JAVASCRIPT ENGINE                                        -->
   <!-- ==================================================================== -->
   <script>
     lucide.createIcons();
 
     // ====================================================================
-    // THEME MANAGEMENT (DARK / LIGHT MODE)
+    // STATE & AUDIO ENGINE
+    // ====================================================================
+    let audioEnabled = true;
+    let audioCtx = null;
+    let currentTab = 'overview';
+    let mode = 'sim';
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playTactileClick() {
+      if (!audioEnabled) return;
+      try {
+        initAudioContext();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (e) {}
+    }
+
+    function playZoneAlarmChime() {
+      if (!audioEnabled) return;
+      try {
+        initAudioContext();
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc1.type = 'sine';
+        osc2.type = 'triangle';
+        
+        // Two-tone industrial chime (440Hz -> 660Hz)
+        osc1.frequency.setValueAtTime(520, now);
+        osc1.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+        osc2.frequency.setValueAtTime(260, now);
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.005, now + 0.28);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.28);
+        osc2.stop(now + 0.28);
+      } catch (e) {}
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const icon = document.getElementById('icon-audio');
+      const text = document.getElementById('text-audio');
+      if (audioEnabled) {
+        icon.setAttribute('data-lucide', 'volume-2');
+        icon.className = 'w-4 h-4 text-emerald-500';
+        text.innerText = 'SIREN: ON';
+        playTactileClick();
+      } else {
+        icon.setAttribute('data-lucide', 'volume-x');
+        icon.className = 'w-4 h-4 text-slate-400';
+        text.innerText = 'SIREN: OFF';
+      }
+      lucide.createIcons();
+    }
+
+    // ====================================================================
+    // THEME MANAGEMENT (PERSISTENT & ACCESSIBLE)
     // ====================================================================
     function initTheme() {
-      const savedTheme = localStorage.getItem('theme');
+      const savedTheme = localStorage.getItem('sentinel_theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
       applyTheme(isDark);
@@ -854,10 +1117,10 @@
     function applyTheme(isDark) {
       if (isDark) {
         document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
+        localStorage.setItem('sentinel_theme', 'dark');
       } else {
         document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
+        localStorage.setItem('sentinel_theme', 'light');
       }
       updateChartsTheme(isDark);
       if (typeof drawScene === 'function') drawScene();
@@ -866,34 +1129,34 @@
     }
 
     function toggleTheme() {
+      playTactileClick();
       const isDark = document.documentElement.classList.contains('dark');
       applyTheme(!isDark);
     }
 
     // ====================================================================
-    // ROUTING & NAVIGATION
+    // TAB ROUTING & NAVIGATION
     // ====================================================================
-    let currentTab = 'overview';
-    let audioEnabled = true;
-    let audioCtx = null;
-    let mode = 'sim';
+    const tabList = ['overview', 'monitoring', 'tracking', 'ppe', 'zones', 'incidents', 'pipeline'];
 
     function navigateTab(tabId) {
+      playTactileClick();
       currentTab = tabId;
       document.querySelectorAll('.tab-view').forEach(view => view.classList.add('hidden'));
       const activeView = document.getElementById('view-' + tabId);
       if (activeView) activeView.classList.remove('hidden');
 
-      // Update sidebar button styles
+      // Update sidebar button states
       document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.className = "nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent";
+        btn.className = "nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent";
       });
 
       const activeBtn = document.getElementById('nav-' + tabId);
       if (activeBtn) {
-        activeBtn.className = "nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all bg-brand-50 dark:bg-brand-500/10 border border-brand-200 dark:border-brand-500/20 text-brand-700 dark:text-brand-400";
+        activeBtn.className = "nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all bg-techcyan-50 dark:bg-techcyan-500/10 text-techcyan-700 dark:text-techcyan-400 border border-techcyan-200 dark:border-techcyan-500/20";
       }
 
+      // Close mobile sidebar if open
       const sidebar = document.getElementById('sidebar');
       if (window.innerWidth < 1024) sidebar.classList.add('-translate-x-full');
 
@@ -920,43 +1183,23 @@
     }
 
     function toggleNotifications() {
+      playTactileClick();
       const menu = document.getElementById('notif-menu');
       menu.classList.toggle('hidden');
     }
 
-    function toggleAudio() {
-      audioEnabled = !audioEnabled;
-      const icon = document.getElementById('icon-audio');
-      const text = document.getElementById('text-audio');
-      if (audioEnabled) {
-        icon.setAttribute('data-lucide', 'volume-2');
-        text.innerText = 'Siren: ON';
-      } else {
-        icon.setAttribute('data-lucide', 'volume-x');
-        text.innerText = 'Siren: OFF';
-      }
-      lucide.createIcons();
+    function openShortcutsModal() {
+      playTactileClick();
+      document.getElementById('shortcuts-modal').classList.remove('hidden');
     }
 
-    function playBeep(freq = 880, type = 'square', duration = 0.15) {
-      if (!audioEnabled) return;
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-      } catch (e) {}
+    function closeShortcutsModal() {
+      playTactileClick();
+      document.getElementById('shortcuts-modal').classList.add('hidden');
     }
 
     // ====================================================================
-    // SIMULATION ENGINE (INTERACTIVE WORKSPACE)
+    // SIMULATION ENGINE & SCENE OBJECTS
     // ====================================================================
     const canvas = document.getElementById('viewport');
     const ctx = canvas.getContext('2d');
@@ -969,11 +1212,11 @@
     ];
 
     let sceneObjects = [
-      { id: 101, type: "person", name: "Worker-A", x: 220, y: 400, w: 60, h: 140, helmet: true, vest: true, targetX: null, targetY: null, dragging: false },
-      { id: 102, type: "person", name: "Worker-B", x: 340, y: 280, w: 60, h: 140, helmet: false, vest: true, targetX: null, targetY: null, dragging: false },
-      { id: 103, type: "person", name: "Worker-C", x: 380, y: 530, w: 60, h: 140, helmet: true, vest: false, targetX: null, targetY: null, dragging: false },
-      { id: 201, type: "vehicle", name: "Forklift-01", x: 180, y: 560, w: 100, h: 80, targetX: null, targetY: null, dragging: false },
-      { id: 301, type: "cargo", name: "Cargo Pallet", x: 350, y: 480, w: 70, h: 60, targetX: null, targetY: null, dragging: false }
+      { id: 101, type: "person", name: "Worker-A", x: 220, y: 380, w: 56, h: 130, helmet: true, vest: true, targetX: null, targetY: null, dragging: false, vx: 0, vy: 0, trail: [] },
+      { id: 102, type: "person", name: "Worker-B", x: 340, y: 260, w: 56, h: 130, helmet: false, vest: true, targetX: null, targetY: null, dragging: false, vx: 0, vy: 0, trail: [] },
+      { id: 103, type: "person", name: "Worker-C", x: 380, y: 520, w: 56, h: 130, helmet: true, vest: false, targetX: null, targetY: null, dragging: false, vx: 0, vy: 0, trail: [] },
+      { id: 201, type: "vehicle", name: "Forklift-01", x: 180, y: 560, w: 90, h: 75, targetX: null, targetY: null, dragging: false, vx: 0, vy: 0, trail: [] },
+      { id: 301, type: "cargo", name: "Cargo Pallet", x: 340, y: 440, w: 65, h: 55, targetX: null, targetY: null, dragging: false, vx: 0, vy: 0, trail: [] }
     ];
 
     let selectedObject = sceneObjects[0];
@@ -981,6 +1224,25 @@
     let activeViolationsCount = 0;
     let lastAlertTime = 0;
     let incidentsDatabase = [];
+
+    // Pre-populate with realistic baseline incident logs
+    const seedIncidents = [
+      { id: "INC-0001", timestamp: new Date(Date.now() - 420000).toISOString(), displayTime: "15:42:10", type: "MISSING_PPE", object: "Worker-B", severity: "WARNING", camera: "CAM-01", details: "Hardhat not detected in crane work envelope", action: "MQTT_TELEMETRY" },
+      { id: "INC-0002", timestamp: new Date(Date.now() - 280000).toISOString(), displayTime: "15:44:30", type: "MISSING_PPE", object: "Worker-C", severity: "WARNING", camera: "CAM-01", details: "High-visibility vest missing", action: "MQTT_TELEMETRY" }
+    ];
+    seedIncidents.forEach(inc => {
+      inc.raw = {
+        timestamp: inc.timestamp,
+        pipeline: "CraftifAI_PipeGen_Safety_v0.5.1",
+        camera_id: inc.camera,
+        event_type: inc.type,
+        severity: inc.severity,
+        target: inc.object,
+        violations: [inc.details],
+        action: inc.action
+      };
+      incidentsDatabase.unshift(inc);
+    });
 
     function isInsideZone(px, py, poly) {
       let inside = false;
@@ -1020,53 +1282,85 @@
         type: type,
         object: objectName,
         severity: severity,
-        camera: "CAM_SITE_NORTH",
+        camera: "CAM-01",
         details: details,
-        action: "MQTT_BROADCAST",
+        action: "MQTT_INTERLOCK",
         raw: {
           timestamp: isoStr,
           pipeline: "CraftifAI_PipeGen_Safety_v0.5.1",
-          camera_id: "CAM_SITE_NORTH",
+          engine: "TensorRT_FP16",
+          latency_ms: 6.54,
+          fps: 152.9,
+          camera_id: "CAM-01",
           event_type: type,
           severity: severity,
           target: objectName,
           coordinates: rawObj ? [Math.round(rawObj.x), Math.round(rawObj.y)] : [0,0],
           bbox: rawObj ? [Math.round(rawObj.x - rawObj.w/2), Math.round(rawObj.y - rawObj.h/2), Math.round(rawObj.w), Math.round(rawObj.h)] : [0,0,0,0],
           violations: [details],
-          action_taken: "MQTT_RELAY_ACTIVATED"
+          action_taken: "MQTT_RELAY_ACTIVATED",
+          interlock: severity === 'CRITICAL' ? 'EMERGENCY_STOP_ARMED' : 'LOGGED'
         }
       };
 
       incidentsDatabase.unshift(incidentItem);
       if (incidentsDatabase.length > 100) incidentsDatabase.pop();
 
+      // Update right-docked MQTT feed
       const feed = document.getElementById('incident-feed');
       if (feed) {
         const card = document.createElement('div');
-        const isDark = document.documentElement.classList.contains('dark');
-        card.className = `p-2.5 rounded-lg border ${severity === 'CRITICAL' ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/60 text-red-800 dark:text-red-300' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300'} transition-all`;
+        const isCrit = severity === 'CRITICAL';
+        card.className = `p-2 rounded border text-[10px] font-mono transition-all ${
+          isCrit ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/60 text-red-800 dark:text-red-300' 
+                 : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300'
+        }`;
         card.innerHTML = `
-          <div class="flex justify-between items-center text-[10px] mb-0.5">
-            <span class="font-bold px-1 rounded ${severity === 'CRITICAL' ? 'bg-red-200 dark:bg-red-900/60 text-red-900 dark:text-red-200' : 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'}">${type}</span>
+          <div class="flex justify-between items-center text-[9px] mb-0.5">
+            <span class="font-bold px-1 rounded ${isCrit ? 'bg-red-200 dark:bg-red-900/70 text-red-900 dark:text-red-200' : 'bg-amber-200 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200'}">${type}</span>
             <span class="text-slate-400">${timeStr}</span>
           </div>
-          <div class="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">${objectName}: ${details}</div>
-          <div class="text-[10px] text-slate-400 mt-0.5">Dispatched via MQTT [QoS 1]</div>
+          <div class="font-semibold text-slate-800 dark:text-slate-200">${objectName}: ${details}</div>
+          <div class="text-[9px] text-slate-400 mt-0.5 flex justify-between">
+            <span>Payload &rarr; MQTT [QoS 1]</span>
+            <span class="text-techcyan-600 dark:text-techcyan-400">SENT</span>
+          </div>
         `;
         feed.insertBefore(card, feed.firstChild);
-        if (feed.children.length > 25) feed.removeChild(feed.lastChild);
+        if (feed.children.length > 20) feed.removeChild(feed.lastChild);
+      }
+
+      // Update notification dropdown
+      const notifList = document.getElementById('dropdown-notif-list');
+      const notifDot = document.getElementById('notif-badge-dot');
+      if (notifList) {
+        if (notifList.children[0] && notifList.children[0].innerText.includes('System nominal')) {
+          notifList.innerHTML = '';
+        }
+        const notifItem = document.createElement('div');
+        notifItem.className = 'p-1.5 rounded bg-slate-50 dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] text-[10px]';
+        notifItem.innerHTML = `<span class="font-bold text-red-500">${type}</span>: ${objectName} • <span class="text-slate-400">${timeStr}</span>`;
+        notifList.insertBefore(notifItem, notifList.firstChild);
+        if (notifDot) notifDot.classList.remove('hidden');
       }
 
       updateOverviewRecent();
       const badge = document.getElementById('sidebar-incident-badge');
-      if (badge) badge.innerText = incidentsDatabase.length + " Alerts";
+      if (badge) badge.innerText = incidentsDatabase.length + " Events";
     }
 
     function clearIncidentLogs() {
+      incidentsDatabase = [];
       const feed = document.getElementById('incident-feed');
-      if (feed) feed.innerHTML = '';
+      if (feed) feed.innerHTML = '<div class="text-[11px] text-slate-400 p-2 text-center font-mono">Stream cleared.</div>';
+      const badge = document.getElementById('sidebar-incident-badge');
+      if (badge) badge.innerText = "0 Events";
+      updateOverviewRecent();
     }
 
+    // ====================================================================
+    // ADVANCED COMPUTER VISION CANVAS RENDERING
+    // ====================================================================
     function drawScene() {
       if (mode !== 'sim') return;
 
@@ -1074,12 +1368,12 @@
       const h = canvas.height;
       const isDark = document.documentElement.classList.contains('dark');
 
-      // Factory Floor Background
-      ctx.fillStyle = isDark ? '#0F172A' : '#F8FAFC';
+      // 1. Factory Floor Background (Technical Engineering Plate)
+      ctx.fillStyle = isDark ? '#080C14' : '#F1F5F9';
       ctx.fillRect(0, 0, w, h);
 
-      // Floor Grid
-      ctx.strokeStyle = isDark ? '#1E293B' : '#E2E8F0';
+      // 2. Metric Grid Ticks (Every 60px = 1.0m)
+      ctx.strokeStyle = isDark ? 'rgba(30, 41, 59, 0.45)' : 'rgba(203, 213, 225, 0.6)';
       ctx.lineWidth = 1;
       for (let x = 0; x < w; x += 60) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
@@ -1088,39 +1382,67 @@
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
       }
 
-      // Safe Zone Marker
-      ctx.fillStyle = isDark ? '#065F46' : '#059669';
-      ctx.font = 'bold 15px monospace';
-      ctx.fillText('AUTHORIZED WORKER ZONE (SAFE AREA)', 50, 150);
+      // 3. Top and Left Coordinate Axis Rulers
+      ctx.fillStyle = isDark ? '#334155' : '#94A3B8';
+      ctx.font = '9px monospace';
+      for (let x = 60; x < w; x += 120) {
+        ctx.fillText(`${(x/60).toFixed(1)}m`, x + 3, 12);
+      }
+      for (let y = 60; y < h; y += 120) {
+        ctx.fillText(`${(y/60).toFixed(1)}m`, 4, y - 3);
+      }
 
-      // Heavy Machinery Area Box
-      ctx.fillStyle = isDark ? '#1E293B' : '#E2E8F0';
-      ctx.fillRect(660, 260, 380, 300);
-      ctx.strokeStyle = isDark ? '#334155' : '#CBD5E1';
+      // 4. Authorized Work Area Boundary Marker
+      ctx.fillStyle = isDark ? 'rgba(16, 185, 129, 0.05)' : 'rgba(16, 185, 129, 0.04)';
+      ctx.fillRect(40, 40, 420, 640);
+      ctx.strokeStyle = isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.25)';
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(40, 40, 420, 640);
+      ctx.setLineDash([]);
+      ctx.fillStyle = isDark ? '#10B981' : '#059669';
+      ctx.font = 'bold 11px monospace';
+      ctx.fillText('AUTHORIZED WORKER ZONE (SAFE AREA)', 55, 62);
+
+      // 5. Heavy Machinery Silhouette Unit
+      ctx.fillStyle = isDark ? '#111827' : '#E2E8F0';
+      ctx.fillRect(680, 260, 360, 280);
+      ctx.strokeStyle = isDark ? '#1F2937' : '#CBD5E1';
       ctx.lineWidth = 2;
-      ctx.strokeRect(660, 260, 380, 300);
-      ctx.fillStyle = isDark ? '#64748B' : '#475569';
-      ctx.font = 'bold 14px monospace';
-      ctx.fillText('[HIGH CRANE & PRESS MACHINERY UNIT]', 685, 420);
+      ctx.strokeRect(680, 260, 360, 280);
+      ctx.fillStyle = isDark ? '#475569' : '#64748B';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText('[HIGH CRANE & PRESS MACHINERY CELL 04]', 700, 410);
 
-      // Restricted Ground Hazard Zone
+      // 6. Restricted Hazard Enclosure Polygon
       ctx.beginPath();
       ctx.moveTo(hazardZone[0].x, hazardZone[0].y);
       for (let i = 1; i < hazardZone.length; i++) ctx.lineTo(hazardZone[i].x, hazardZone[i].y);
       ctx.closePath();
-      ctx.strokeStyle = activeViolationsCount > 0 ? '#EF4444' : '#F97316';
-      ctx.lineWidth = 3;
-      ctx.fillStyle = activeViolationsCount > 0 
-        ? (isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.12)')
-        : (isDark ? 'rgba(249, 115, 22, 0.08)' : 'rgba(249, 115, 22, 0.06)');
+
+      const inViol = activeViolationsCount > 0;
+      ctx.strokeStyle = inViol ? '#EF4444' : '#F59E0B';
+      ctx.lineWidth = inViol ? 3 : 2;
+      ctx.fillStyle = inViol 
+        ? (isDark ? 'rgba(239, 68, 68, 0.16)' : 'rgba(239, 68, 68, 0.12)')
+        : (isDark ? 'rgba(245, 158, 11, 0.08)' : 'rgba(245, 158, 11, 0.05)');
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = activeViolationsCount > 0 ? '#EF4444' : '#F97316';
-      ctx.font = 'bold 16px monospace';
-      ctx.fillText('⚠ RESTRICTED HAZARD ZONE: CRANE OPERATIONS', hazardZone[0].x + 20, hazardZone[0].y - 12);
+      // Geofence Hazard Chevrons / Diagonal Border Ticks
+      ctx.strokeStyle = inViol ? '#EF4444' : '#F59E0B';
+      ctx.lineWidth = 1;
+      for (let x = hazardZone[0].x + 20; x < hazardZone[1].x; x += 30) {
+        ctx.beginPath();
+        ctx.moveTo(x, hazardZone[0].y);
+        ctx.lineTo(x + 10, hazardZone[0].y + 10);
+        ctx.stroke();
+      }
 
-      // Smooth interpolation for user clicks
+      ctx.fillStyle = inViol ? '#EF4444' : '#F59E0B';
+      ctx.font = 'bold 13px monospace';
+      ctx.fillText('⚠ RESTRICTED EXCLUSION ZONE // CRANE CLEARANCE RADIUS: 8.0M', hazardZone[0].x + 15, hazardZone[0].y - 8);
+
+      // 7. Smooth Interpolation for User Click-to-Move
       let needsNextFrame = false;
       sceneObjects.forEach(obj => {
         if (obj.targetX !== null && obj.targetY !== null && !obj.dragging) {
@@ -1128,19 +1450,47 @@
           const dy = obj.targetY - obj.y;
           const dist = Math.hypot(dx, dy);
           if (dist > 3) {
-            obj.x += (dx / dist) * 5;
-            obj.y += (dy / dist) * 5;
+            const step = Math.min(dist, 5.5);
+            obj.vx = (dx / dist) * step;
+            obj.vy = (dy / dist) * step;
+            obj.x += obj.vx;
+            obj.y += obj.vy;
             needsNextFrame = true;
           } else {
             obj.x = obj.targetX;
             obj.y = obj.targetY;
             obj.targetX = null;
             obj.targetY = null;
+            obj.vx = 0;
+            obj.vy = 0;
           }
+        } else {
+          obj.vx = 0;
+          obj.vy = 0;
+        }
+
+        // Record Trajectory Trail Breadcrumbs
+        obj.trail.push({ x: obj.x, y: obj.y });
+        if (obj.trail.length > 15) obj.trail.shift();
+      });
+
+      // 8. Draw Entity Trajectory Breadcrumb Trails
+      sceneObjects.forEach(obj => {
+        if (obj.trail.length > 2) {
+          ctx.beginPath();
+          ctx.moveTo(obj.trail[0].x, obj.trail[0].y);
+          for (let i = 1; i < obj.trail.length; i++) {
+            ctx.lineTo(obj.trail[i].x, obj.trail[i].y);
+          }
+          ctx.strokeStyle = isDark ? 'rgba(56, 189, 248, 0.25)' : 'rgba(2, 132, 199, 0.25)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([2, 3]);
+          ctx.stroke();
+          ctx.setLineDash([]);
         }
       });
 
-      // Draw Entities
+      // 9. Draw Entities & Tactical Computer Vision Bounding Boxes
       let currentViolations = 0;
       let lastIntruderDesc = "";
 
@@ -1150,7 +1500,7 @@
         const x2 = obj.x + bw/2, y2 = obj.y + bh/2;
 
         const inHazard = doesBoxIntersectZone(obj.x, obj.y, bw, bh, hazardZone);
-        let statusText = "SAFE: AUTHORIZED";
+        let statusText = "NOMINAL (SAFE)";
         let statusColor = "#10B981";
 
         if (obj.type === "person") {
@@ -1160,64 +1510,90 @@
 
           if (inHazard) {
             currentViolations++;
-            statusText = "CRITICAL: ZONE INTRUSION";
+            statusText = "ZONE_BREACH";
             statusColor = "#EF4444";
-            lastIntruderDesc = `${obj.name} in Restricted Zone`;
+            lastIntruderDesc = `${obj.name} in Restricted Crane Cell`;
           } else if (missingPPE.length > 0) {
             currentViolations++;
-            statusText = "WARNING: " + missingPPE.join(", ");
+            statusText = missingPPE.join(" + ");
             statusColor = "#F59E0B";
           }
 
-          // Person Body
-          ctx.fillStyle = isDark ? '#475569' : '#64748B';
-          ctx.fillRect(x1 + 10, y1 + 35, bw - 20, bh - 35);
+          // Ground Contact Ellipse
           ctx.beginPath();
-          ctx.arc(obj.x, y1 + 18, 16, 0, Math.PI * 2);
+          ctx.ellipse(obj.x, y2, bw * 0.45, 8, 0, 0, Math.PI * 2);
+          ctx.fillStyle = isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.15)';
+          ctx.fill();
+
+          // Person Torso & Limbs
+          ctx.fillStyle = isDark ? '#475569' : '#64748B';
+          ctx.fillRect(x1 + 10, y1 + 32, bw - 20, bh - 32);
+
+          // Head
+          ctx.beginPath();
+          ctx.arc(obj.x, y1 + 16, 14, 0, Math.PI * 2);
           ctx.fillStyle = '#F87171';
           ctx.fill();
 
+          // Hardhat (if present)
           if (obj.helmet) {
             ctx.beginPath();
-            ctx.ellipse(obj.x, y1 + 10, 18, 12, 0, Math.PI, 0);
+            ctx.ellipse(obj.x, y1 + 9, 16, 10, 0, Math.PI, 0);
             ctx.fillStyle = '#FACC15';
             ctx.fill();
+            ctx.strokeStyle = '#CA8A04';
+            ctx.lineWidth = 1;
+            ctx.stroke();
           }
+
+          // Safety Vest (if present)
           if (obj.vest) {
-            ctx.fillStyle = '#22C55E';
-            ctx.fillRect(x1 + 14, y1 + 45, bw - 28, 45);
+            ctx.fillStyle = '#10B981';
+            ctx.fillRect(x1 + 12, y1 + 40, bw - 24, 42);
+            // Reflective Stripe
+            ctx.fillStyle = '#FEF08A';
+            ctx.fillRect(x1 + 12, y1 + 54, bw - 24, 6);
           }
         } 
         else if (obj.type === "vehicle") {
           if (inHazard) {
             currentViolations++;
-            statusText = "CRITICAL: VEHICLE IN ZONE";
+            statusText = "VEHICLE_INTRUSION";
             statusColor = "#EF4444";
-            lastIntruderDesc = `${obj.name} (Vehicle in Zone)`;
+            lastIntruderDesc = `${obj.name} (Vehicle Breach)`;
           }
 
-          ctx.fillStyle = '#F59E0B';
-          ctx.fillRect(x1, y1 + 20, bw, bh - 35);
+          // Ground Ellipse
+          ctx.beginPath();
+          ctx.ellipse(obj.x, y2, bw * 0.5, 10, 0, 0, Math.PI * 2);
+          ctx.fillStyle = isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.15)';
+          ctx.fill();
+
+          // Forklift Body
+          ctx.fillStyle = '#D97706';
+          ctx.fillRect(x1, y1 + 18, bw, bh - 32);
           ctx.fillStyle = isDark ? '#1E293B' : '#334155';
-          ctx.fillRect(x1 + 20, y1, 35, 30);
+          ctx.fillRect(x1 + 18, y1, 32, 26);
+          // Wheels
           ctx.fillStyle = '#0F172A';
           ctx.beginPath();
-          ctx.arc(x1 + 25, y2 - 10, 12, 0, Math.PI*2);
-          ctx.arc(x2 - 25, y2 - 10, 12, 0, Math.PI*2);
+          ctx.arc(x1 + 20, y2 - 8, 10, 0, Math.PI*2);
+          ctx.arc(x2 - 20, y2 - 8, 10, 0, Math.PI*2);
           ctx.fill();
         } 
         else if (obj.type === "cargo") {
           if (inHazard) {
             currentViolations++;
-            statusText = "CRITICAL: CARGO IN ZONE";
+            statusText = "FOREIGN_OBJECT";
             statusColor = "#EF4444";
-            lastIntruderDesc = `${obj.name} (Cargo In Zone)`;
+            lastIntruderDesc = `${obj.name} (Foreign Debris in Zone)`;
           }
 
-          ctx.fillStyle = '#B45309';
+          // Cargo Pallet Box
+          ctx.fillStyle = '#92400E';
           ctx.fillRect(x1, y1, bw, bh);
           ctx.strokeStyle = '#78350F';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 1.5;
           ctx.strokeRect(x1, y1, bw, bh);
           ctx.beginPath();
           ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
@@ -1225,35 +1601,61 @@
           ctx.stroke();
         }
 
-        // Selected halo
+        // Active Selected Halo
         if (selectedObject && selectedObject.id === obj.id) {
           ctx.strokeStyle = '#0284C7';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 1.5;
           ctx.setLineDash([4, 4]);
-          ctx.strokeRect(x1 - 6, y1 - 6, bw + 12, bh + 12);
+          ctx.strokeRect(x1 - 5, y1 - 5, bw + 10, bh + 10);
           ctx.setLineDash([]);
         }
 
-        // YOLOv8 Bounding Box
+        // Tactical Computer Vision Bounding Box (L-shaped optical corners)
+        const cornerLen = 10;
         ctx.strokeStyle = statusColor;
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2;
+
+        // Top-Left Corner
+        ctx.beginPath();
+        ctx.moveTo(x1, y1 + cornerLen); ctx.lineTo(x1, y1); ctx.lineTo(x1 + cornerLen, y1);
+        ctx.stroke();
+
+        // Top-Right Corner
+        ctx.beginPath();
+        ctx.moveTo(x2 - cornerLen, y1); ctx.lineTo(x2, y1); ctx.lineTo(x2, y1 + cornerLen);
+        ctx.stroke();
+
+        // Bottom-Left Corner
+        ctx.beginPath();
+        ctx.moveTo(x1, y2 - cornerLen); ctx.lineTo(x1, y2); ctx.lineTo(x1 + cornerLen, y2);
+        ctx.stroke();
+
+        // Bottom-Right Corner
+        ctx.beginPath();
+        ctx.moveTo(x2 - cornerLen, y2); ctx.lineTo(x2, y2); ctx.lineTo(x2, y2 - cornerLen);
+        ctx.stroke();
+
+        // Subtle Bounding Outline
+        ctx.strokeStyle = statusColor;
+        ctx.lineWidth = 0.75;
         ctx.strokeRect(x1, y1, bw, bh);
 
-        // Header Tag
+        // Tactical Header Ribbon
+        const tagWidth = Math.max(bw + 30, 180);
         ctx.fillStyle = statusColor;
-        const tagWidth = Math.max(bw + 40, 240);
-        ctx.fillRect(x1, y1 - 24, tagWidth, 24);
+        ctx.fillRect(x1, y1 - 20, tagWidth, 20);
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 12px monospace';
-        ctx.fillText(`${obj.name}: ${statusText}`, x1 + 6, y1 - 8);
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText(`[#${obj.id}] ${obj.name.toUpperCase()} // ${statusText}`, x1 + 5, y1 - 6);
 
-        // Anchor
+        // Center Coordinate Anchor
         ctx.beginPath();
-        ctx.arc(obj.x, obj.y, 4, 0, Math.PI * 2);
+        ctx.arc(obj.x, obj.y, 3, 0, Math.PI * 2);
         ctx.fillStyle = statusColor;
         ctx.fill();
       });
 
+      // Update Incursion Counts & Alarm State
       activeViolationsCount = currentViolations;
       const kpiOv = document.getElementById('ov-kpi-violations');
       if (kpiOv) kpiOv.innerText = activeViolationsCount;
@@ -1266,7 +1668,7 @@
       if (activeViolationsCount > 0) {
         if (alarmBanner) {
           alarmBanner.classList.remove('hidden');
-          alarmText.innerText = "CRITICAL: " + (lastIntruderDesc || "OBJECT DETECTED IN RESTRICTED ZONE");
+          alarmText.innerText = "CRITICAL: " + (lastIntruderDesc || "OBJECT / PERSONNEL IN RESTRICTED ZONE");
         }
         const now = Date.now();
         if (now - lastAlertTime > 2500) {
@@ -1274,37 +1676,40 @@
           totalIncidentsCount++;
           const kpiTot = document.getElementById('ov-kpi-total');
           if (kpiTot) kpiTot.innerText = totalIncidentsCount;
-          playBeep(750, 'sawtooth', 0.2);
-          logTelemetry("ZONE_BREACH", lastIntruderDesc || "Entity", "CRITICAL", "Restricted zone encroachment detected by edge vision", selectedObject);
+          playZoneAlarmChime();
+          logTelemetry("ZONE_BREACH", lastIntruderDesc || "Entity", "CRITICAL", "Restricted boundary encroachment detected by vision engine", selectedObject);
         }
       } else {
         if (alarmBanner) alarmBanner.classList.add('hidden');
       }
 
-      // Live HUD Box
-      ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)';
-      ctx.fillRect(15, 15, 410, 80);
-      ctx.strokeStyle = isDark ? '#334155' : '#CBD5E1';
+      // Live Viewport HUD Box (Industrial Metadata Card)
+      ctx.fillStyle = isDark ? 'rgba(10, 14, 23, 0.88)' : 'rgba(255, 255, 255, 0.92)';
+      ctx.fillRect(15, 15, 360, 68);
+      ctx.strokeStyle = isDark ? '#1E293B' : '#CBD5E1';
       ctx.lineWidth = 1;
-      ctx.strokeRect(15, 15, 410, 80);
+      ctx.strokeRect(15, 15, 360, 68);
 
       ctx.fillStyle = isDark ? '#38BDF8' : '#0284C7';
-      ctx.font = 'bold 14px monospace';
-      ctx.fillText('CraftifAI PipeGen Safety Sentinel', 25, 38);
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText('SENTINEL-EDGE // REAL-TIME INGESTION', 25, 34);
 
       ctx.fillStyle = isDark ? '#E2E8F0' : '#334155';
-      ctx.font = '12px monospace';
-      ctx.fillText(`Pipeline Speed: 152.9 FPS | Active Entity: ${selectedObject ? selectedObject.name : 'None'}`, 25, 58);
+      ctx.font = '11px monospace';
+      ctx.fillText(`Target: ${selectedObject ? selectedObject.name : 'None'} | Incursions: ${activeViolationsCount}`, 25, 52);
       ctx.fillStyle = activeViolationsCount > 0 ? '#EF4444' : '#10B981';
-      ctx.fillText(`Restricted Incursions: ${activeViolationsCount} | Drag or Click to Move`, 25, 78);
+      ctx.fillText(`Interlock: ${activeViolationsCount > 0 ? 'ALERT TRIGGERED' : 'ARMED / NOMINAL'}`, 25, 70);
 
       if (needsNextFrame) {
         requestAnimationFrame(drawScene);
       }
     }
 
-    // Direct User Movement Handlers
+    // ====================================================================
+    // USER MOVEMENT & DRAG/CLICK/KEYBOARD HANDLERS
+    // ====================================================================
     let isDragging = false;
+
     canvas.addEventListener('mousedown', (e) => {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -1325,22 +1730,32 @@
         selectObject(clickedObject);
         clickedObject.dragging = true;
         isDragging = true;
+        canvas.classList.add('grabbing');
       } else if (selectedObject) {
-        selectedObject.targetX = Math.max(80, Math.min(canvas.width - 80, mouseX));
-        selectedObject.targetY = Math.max(180, Math.min(canvas.height - 80, mouseY));
+        selectedObject.targetX = Math.max(60, Math.min(canvas.width - 60, mouseX));
+        selectedObject.targetY = Math.max(160, Math.min(canvas.height - 60, mouseY));
         requestAnimationFrame(drawScene);
       }
     });
 
     window.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mouseX = Math.round((e.clientX - rect.left) * scaleX);
+      const mouseY = Math.round((e.clientY - rect.top) * scaleY);
+
+      const coordsEl = document.getElementById('hud-coords-readout');
+      if (coordsEl && mouseX >= 0 && mouseX <= canvas.width && mouseY >= 0 && mouseY <= canvas.height) {
+        coordsEl.innerText = `X: ${mouseX}px | Y: ${mouseY}px (${(mouseX/60).toFixed(1)}m, ${(mouseY/60).toFixed(1)}m)`;
+      }
+
       if (isDragging && selectedObject && selectedObject.dragging) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        selectedObject.x = Math.max(80, Math.min(canvas.width - 80, (e.clientX - rect.left) * scaleX));
-        selectedObject.y = Math.max(180, Math.min(canvas.height - 80, (e.clientY - rect.top) * scaleY));
+        selectedObject.x = Math.max(60, Math.min(canvas.width - 60, mouseX));
+        selectedObject.y = Math.max(160, Math.min(canvas.height - 60, mouseY));
         selectedObject.targetX = null;
         selectedObject.targetY = null;
+        updateInspectorCard(selectedObject);
         drawScene();
       }
     });
@@ -1348,25 +1763,74 @@
     window.addEventListener('mouseup', () => {
       if (selectedObject) selectedObject.dragging = false;
       isDragging = false;
+      canvas.classList.remove('grabbing');
     });
 
-    // Keyboard WASD/Arrow navigation
+    // Keyboard Shortcuts & Entity Navigation
     window.addEventListener('keydown', (e) => {
+      // Avoid intercepting input fields
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Tab navigation shortcuts (1 - 7)
+      if (e.key >= '1' && e.key <= '7') {
+        const idx = parseInt(e.key) - 1;
+        if (tabList[idx]) navigateTab(tabList[idx]);
+        return;
+      }
+
+      if (e.key === 't' || e.key === 'T') {
+        toggleTheme();
+        return;
+      }
+
+      if (e.key === 'm' || e.key === 'M') {
+        toggleAudio();
+        return;
+      }
+
+      if (e.key === 'c' || e.key === 'C') {
+        const sel = document.getElementById('camera-selector');
+        sel.value = sel.value === 'sim' ? 'cam' : 'sim';
+        handleCameraChange(sel.value);
+        return;
+      }
+
+      if (e.key === '?') {
+        openShortcutsModal();
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        closeShortcutsModal();
+        closeJSONModal();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const curIdx = sceneObjects.indexOf(selectedObject);
+        const nextIdx = (curIdx + 1) % sceneObjects.length;
+        selectObject(sceneObjects[nextIdx]);
+        return;
+      }
+
       if (!selectedObject) return;
-      const step = 25;
+      const step = 20;
       let moved = false;
 
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
-        selectedObject.y = Math.max(180, selectedObject.y - step);
+        selectedObject.y = Math.max(160, selectedObject.y - step);
         moved = true;
       } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-        selectedObject.y = Math.min(canvas.height - 80, selectedObject.y + step);
+        selectedObject.y = Math.min(canvas.height - 60, selectedObject.y + step);
         moved = true;
       } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        selectedObject.x = Math.max(80, selectedObject.x - step);
+        selectedObject.x = Math.max(60, selectedObject.x - step);
         moved = true;
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        selectedObject.x = Math.min(canvas.width - 80, selectedObject.x + step);
+        selectedObject.x = Math.min(canvas.width - 60, selectedObject.x + step);
         moved = true;
       }
 
@@ -1374,6 +1838,7 @@
         e.preventDefault();
         selectedObject.targetX = null;
         selectedObject.targetY = null;
+        updateInspectorCard(selectedObject);
         drawScene();
       }
     });
@@ -1383,10 +1848,44 @@
       const label = document.getElementById('kpi-selected-mon');
       if (label) label.innerText = obj.name;
       renderObjectSelectors();
+      updateInspectorCard(obj);
       drawScene();
     }
 
+    function updateInspectorCard(obj) {
+      if (!obj) return;
+      document.getElementById('insp-id-tag').innerText = `#${obj.id}`;
+      document.getElementById('insp-class').innerText = obj.type.toUpperCase();
+      document.getElementById('insp-coords').innerText = `X:${Math.round(obj.x)}, Y:${Math.round(obj.y)}`;
+
+      const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
+      const distEl = document.getElementById('insp-distance');
+      if (distEl) {
+        distEl.innerText = inHazard ? "0.0m (ZONE BREACH)" : "> 15.0m (Nominal)";
+        distEl.className = inHazard ? "text-red-600 dark:text-red-400 font-bold" : "text-emerald-600 dark:text-emerald-400 font-bold";
+      }
+
+      const ppeControls = document.getElementById('insp-ppe-controls');
+      const togglesContainer = document.getElementById('insp-ppe-toggles');
+      if (obj.type === 'person') {
+        ppeControls.classList.remove('hidden');
+        togglesContainer.innerHTML = `
+          <button onclick="toggleWorkerPPE(${obj.id}, 'helmet')" class="py-1 px-2 rounded border font-mono font-bold flex justify-between items-center ${obj.helmet ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300' : 'bg-slate-50 dark:bg-[#131B2E] border-slate-200 dark:border-[#1E293B] text-slate-400'}">
+            <span>Hardhat</span>
+            <span>${obj.helmet ? 'PASS' : 'FAIL'}</span>
+          </button>
+          <button onclick="toggleWorkerPPE(${obj.id}, 'vest')" class="py-1 px-2 rounded border font-mono font-bold flex justify-between items-center ${obj.vest ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300' : 'bg-slate-50 dark:bg-[#131B2E] border-slate-200 dark:border-[#1E293B] text-slate-400'}">
+            <span>Vest</span>
+            <span>${obj.vest ? 'PASS' : 'FAIL'}</span>
+          </button>
+        `;
+      } else {
+        ppeControls.classList.add('hidden');
+      }
+    }
+
     function sendToZone(type) {
+      playTactileClick();
       if (type === 'worker') {
         const worker = sceneObjects.find(o => o.type === "person");
         if (worker) {
@@ -1395,7 +1894,7 @@
           selectObject(worker);
         }
       } else if (type === 'box') {
-        const cargo = sceneObjects.find(o => o.type === "cargo") || sceneObjects[3];
+        const cargo = sceneObjects.find(o => o.type === "cargo") || sceneObjects[4];
         if (cargo) {
           cargo.x = 750; cargo.y = 480;
           cargo.targetX = null; cargo.targetY = null;
@@ -1406,12 +1905,14 @@
     }
 
     function evacuateAll() {
-      sceneObjects[0].x = 220; sceneObjects[0].y = 400;
-      sceneObjects[1].x = 340; sceneObjects[1].y = 280;
-      sceneObjects[2].x = 180; sceneObjects[2].y = 560;
-      sceneObjects[3].x = 350; sceneObjects[3].y = 480;
+      playTactileClick();
+      sceneObjects[0].x = 220; sceneObjects[0].y = 380;
+      sceneObjects[1].x = 340; sceneObjects[1].y = 260;
+      sceneObjects[2].x = 380; sceneObjects[2].y = 520;
+      sceneObjects[3].x = 180; sceneObjects[3].y = 560;
+      sceneObjects[4].x = 340; sceneObjects[4].y = 440;
       sceneObjects.forEach(o => { o.targetX = null; o.targetY = null; });
-      logTelemetry("ZONE_EVACUATED", "All Entities", "SAFE", "All personnel and objects cleared to safe area");
+      logTelemetry("ZONE_CLEARED", "All Entities", "SAFE", "All entities cleared to safe authorized footprint");
       drawScene();
     }
 
@@ -1423,43 +1924,69 @@
         const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
         return `
           <div onclick="selectObject(sceneObjects.find(o => o.id === ${obj.id}))" 
-               class="cursor-pointer p-3 rounded-lg border transition-all ${isSel ? 'bg-brand-50 dark:bg-brand-500/10 border-brand-500' : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600'}">
-            <div class="flex items-center justify-between font-mono text-xs font-bold mb-1">
-              <span class="${isSel ? 'text-brand-600 dark:text-brand-400' : 'text-slate-800 dark:text-slate-200'}">${obj.name}</span>
-              <span class="text-[9px] px-1.5 py-0.5 rounded ${inHazard ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'}">
-                ${inHazard ? 'IN ZONE' : 'SAFE'}
+               class="cursor-pointer p-2 rounded border transition-all ${
+                 isSel ? 'bg-techcyan-50 dark:bg-techcyan-500/10 border-techcyan-500' 
+                       : 'bg-slate-50 dark:bg-[#131B2E] border-slate-200 dark:border-[#1E293B] hover:border-slate-300 dark:hover:border-slate-600'
+               }">
+            <div class="flex items-center justify-between font-mono text-[11px] font-bold">
+              <span class="${isSel ? 'text-techcyan-600 dark:text-techcyan-400' : 'text-slate-800 dark:text-slate-200'}">${obj.name}</span>
+              <span class="text-[9px] px-1 py-0.2 rounded font-mono ${
+                inHazard ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' 
+                         : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'
+              }">
+                ${inHazard ? 'BREACH' : 'SAFE'}
               </span>
             </div>
-            ${obj.type === 'person' ? `
-              <div class="flex gap-1.5 mt-2" onclick="event.stopPropagation()">
-                <button onclick="toggleWorkerPPE(${obj.id}, 'helmet')" class="flex-1 py-1 rounded text-[10px] font-mono font-bold border ${obj.helmet ? 'bg-amber-100 dark:bg-amber-950/70 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'}">
-                  Helmet: ${obj.helmet ? 'ON' : 'OFF'}
-                </button>
-                <button onclick="toggleWorkerPPE(${obj.id}, 'vest')" class="flex-1 py-1 rounded text-[10px] font-mono font-bold border ${obj.vest ? 'bg-emerald-100 dark:bg-emerald-950/70 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'}">
-                  Vest: ${obj.vest ? 'ON' : 'OFF'}
-                </button>
-              </div>
-            ` : `
-              <div class="text-[10px] text-slate-400 font-mono mt-1.5">
-                Drag or WASD to move
-              </div>
-            `}
+            <div class="text-[10px] text-slate-400 font-mono mt-1 flex justify-between">
+              <span>#${obj.id}</span>
+              <span>${Math.round(obj.x)}, ${Math.round(obj.y)}</span>
+            </div>
           </div>
         `;
       }).join('');
     }
 
     function toggleWorkerPPE(id, attr) {
+      playTactileClick();
       const obj = sceneObjects.find(o => o.id === id);
       if (obj) {
         obj[attr] = !obj[attr];
         renderObjectSelectors();
+        updateInspectorCard(obj);
+        renderPPEView();
+        recalculatePPERates();
         drawScene();
       }
     }
 
+    function recalculatePPERates() {
+      const workers = sceneObjects.filter(o => o.type === "person");
+      const totalWorkers = workers.length;
+      if (totalWorkers === 0) return;
+
+      const helmets = workers.filter(w => w.helmet).length;
+      const vests = workers.filter(w => w.vest).length;
+      const hRate = ((helmets / totalWorkers) * 100).toFixed(1);
+      const vRate = ((vests / totalWorkers) * 100).toFixed(1);
+      const totalPoints = totalWorkers * 2;
+      const passPoints = helmets + vests;
+      const compRate = ((passPoints / totalPoints) * 100).toFixed(1);
+
+      document.getElementById('ppe-hardhat-rate').innerText = hRate + "%";
+      document.getElementById('ppe-vest-rate').innerText = vRate + "%";
+      document.getElementById('ov-ppe-rate').innerText = compRate + "%";
+      document.getElementById('sb-ppe-compliance').innerText = compRate + "%";
+      document.getElementById('ov-chart-comp-val').innerText = `${passPoints} / ${totalPoints} (${compRate}%)`;
+      document.getElementById('ov-chart-gap-val').innerText = `${totalPoints - passPoints} Missing`;
+
+      if (ppeChart) {
+        ppeChart.data.datasets[0].data = [parseFloat(compRate), 100 - parseFloat(compRate)];
+        ppeChart.update();
+      }
+    }
+
     // ====================================================================
-    // WORKER TRACKING VIEW
+    // SPATIAL MULTI-OBJECT TRACKING VIEW
     // ====================================================================
     function renderTrackingView() {
       const cardsCont = document.getElementById('worker-tracking-cards');
@@ -1469,23 +1996,26 @@
       cardsCont.innerHTML = sceneObjects.map(obj => {
         const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
         return `
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2.5 font-mono text-xs shadow-sm">
+          <div class="bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-[#182238] rounded p-3 space-y-2 font-mono text-xs">
             <div class="flex items-center justify-between">
               <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <i data-lucide="${obj.type === 'person' ? 'user' : obj.type === 'vehicle' ? 'truck' : 'package'}" class="w-4 h-4 text-brand-500"></i>
+                <i data-lucide="${obj.type === 'person' ? 'user' : obj.type === 'vehicle' ? 'truck' : 'box'}" class="w-3.5 h-3.5 text-techcyan-500"></i>
                 ${obj.name}
               </span>
-              <span class="text-[9px] px-2 py-0.5 rounded ${inHazard ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'} font-bold">
+              <span class="text-[9px] px-1 py-0.2 rounded font-mono font-bold ${
+                inHazard ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' 
+                         : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'
+              }">
                 ${inHazard ? 'ZONE BREACH' : 'CLEAR'}
               </span>
             </div>
-            <div class="space-y-1 text-slate-600 dark:text-slate-400 text-[11px]">
-              <div class="flex justify-between"><span>Track ID:</span><span class="text-slate-900 dark:text-white">#${obj.id}</span></div>
-              <div class="flex justify-between"><span>Coordinates:</span><span class="text-slate-900 dark:text-white">X:${Math.round(obj.x)} Y:${Math.round(obj.y)}</span></div>
-              <div class="flex justify-between"><span>PPE Verified:</span><span class="text-slate-900 dark:text-white">${obj.type === 'person' ? (obj.helmet && obj.vest ? '100% Compliant' : 'Missing Gear') : 'N/A'}</span></div>
+            <div class="space-y-1 text-slate-500 dark:text-slate-400 text-[11px]">
+              <div class="flex justify-between"><span>Track ID:</span><strong class="text-slate-800 dark:text-slate-200">#${obj.id}</strong></div>
+              <div class="flex justify-between"><span>Floor Coords:</span><strong class="text-slate-800 dark:text-slate-200">X:${Math.round(obj.x)}, Y:${Math.round(obj.y)}</strong></div>
+              <div class="flex justify-between"><span>PPE Verified:</span><strong class="text-slate-800 dark:text-slate-200">${obj.type === 'person' ? (obj.helmet && obj.vest ? '100% Pass' : 'Gaps Flagged') : 'N/A'}</strong></div>
             </div>
-            <button onclick="navigateTab('monitoring'); selectObject(sceneObjects.find(o => o.id === ${obj.id}));" class="w-full py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-brand-600 dark:text-brand-400 text-[10px] font-bold border border-slate-200 dark:border-slate-700">
-              Locate On Camera &rarr;
+            <button onclick="navigateTab('monitoring'); selectObject(sceneObjects.find(o => o.id === ${obj.id}));" class="w-full py-1 rounded bg-slate-50 dark:bg-[#131B2E] hover:bg-slate-100 text-techcyan-600 dark:text-techcyan-400 text-[10px] font-bold border border-slate-200 dark:border-[#1E293B]">
+              Steer / Locate &rarr;
             </button>
           </div>
         `;
@@ -1494,16 +2024,22 @@
       tableBody.innerHTML = sceneObjects.map(obj => {
         const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
         return `
-          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-            <td class="p-3 font-bold text-slate-900 dark:text-white">#${obj.id}</td>
-            <td class="p-3 capitalize">${obj.type}</td>
-            <td class="p-3 text-slate-500">${Math.round(obj.x)}, ${Math.round(obj.y)}</td>
-            <td class="p-3 ${inHazard ? 'text-red-600 dark:text-red-400 font-bold' : 'text-emerald-600 dark:text-emerald-400'}">${inHazard ? '0m (Inside Zone)' : '> 15m (Safe)'}</td>
-            <td class="p-3">${obj.type === 'person' ? (obj.helmet && obj.vest ? '<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Compliant</span>' : '<span class="text-amber-600 dark:text-amber-400 font-semibold">Violation</span>') : 'N/A'}</td>
-            <td class="p-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${inHazard ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'}">
-                ${inHazard ? 'Incursion' : 'Normal'}
+          <tr class="hover:bg-slate-50 dark:hover:bg-[#131B2E]/60 transition-colors">
+            <td class="p-2.5 font-bold text-slate-900 dark:text-white">#${obj.id}</td>
+            <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-200">${obj.name}</td>
+            <td class="p-2.5 uppercase text-slate-500">${obj.type}</td>
+            <td class="p-2.5 text-slate-500">${Math.round(obj.x)}, ${Math.round(obj.y)}</td>
+            <td class="p-2.5 ${inHazard ? 'text-red-600 dark:text-red-400 font-bold' : 'text-emerald-600 dark:text-emerald-400'}">${inHazard ? '0.0m (Inside Exclusion)' : '> 15.0m (Nominal)'}</td>
+            <td class="p-2.5">${obj.type === 'person' ? (obj.helmet && obj.vest ? '<span class="text-emerald-600 dark:text-emerald-400 font-semibold">100% Compliant</span>' : '<span class="text-amber-600 dark:text-amber-400 font-semibold">Gaps Flagged</span>') : 'N/A'}</td>
+            <td class="p-2.5">
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${inHazard ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'}">
+                ${inHazard ? 'Encroachment' : 'Nominal'}
               </span>
+            </td>
+            <td class="p-2.5 text-right">
+              <button onclick="navigateTab('monitoring'); selectObject(sceneObjects.find(o => o.id === ${obj.id}));" class="text-techcyan-600 dark:text-techcyan-400 hover:underline">
+                View &rarr;
+              </button>
             </td>
           </tr>
         `;
@@ -1513,7 +2049,7 @@
     }
 
     // ====================================================================
-    // PPE VIEW
+    // PPE VIEW & CONTROLS
     // ====================================================================
     function renderPPEView() {
       const container = document.getElementById('ppe-interactive-toggles');
@@ -1521,21 +2057,21 @@
       const persons = sceneObjects.filter(o => o.type === "person");
 
       container.innerHTML = persons.map(w => `
-        <div class="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2.5">
+        <div class="bg-slate-50 dark:bg-[#131B2E] p-3 rounded border border-slate-200 dark:border-[#1E293B] space-y-2">
           <div class="flex justify-between items-center text-xs font-bold text-slate-900 dark:text-white">
             <span>${w.name} (#${w.id})</span>
-            <span class="text-[10px] px-2 py-0.5 rounded ${w.helmet && w.vest ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400'}">
+            <span class="text-[10px] px-1.5 py-0.2 rounded font-mono ${w.helmet && w.vest ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400'}">
               ${w.helmet && w.vest ? 'COMPLIANT' : 'VIOLATION'}
             </span>
           </div>
 
           <div class="space-y-1.5">
-            <button onclick="toggleWorkerPPE(${w.id}, 'helmet'); renderPPEView();" class="w-full py-1.5 rounded-lg border font-mono font-bold text-xs transition-all flex items-center justify-between px-3 ${w.helmet ? 'bg-amber-100 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'}">
+            <button onclick="toggleWorkerPPE(${w.id}, 'helmet')" class="w-full py-1.5 px-2.5 rounded border font-mono font-bold text-xs transition-all flex items-center justify-between ${w.helmet ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300' : 'bg-white dark:bg-[#0E1422] border-slate-200 dark:border-[#182238] text-slate-400'}">
               <span>Hardhat</span>
               <span>${w.helmet ? 'ACTIVE ✓' : 'MISSING ✗'}</span>
             </button>
 
-            <button onclick="toggleWorkerPPE(${w.id}, 'vest'); renderPPEView();" class="w-full py-1.5 rounded-lg border font-mono font-bold text-xs transition-all flex items-center justify-between px-3 ${w.vest ? 'bg-emerald-100 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'}">
+            <button onclick="toggleWorkerPPE(${w.id}, 'vest')" class="w-full py-1.5 px-2.5 rounded border font-mono font-bold text-xs transition-all flex items-center justify-between ${w.vest ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'bg-white dark:bg-[#0E1422] border-slate-200 dark:border-[#182238] text-slate-400'}">
               <span>Safety Vest</span>
               <span>${w.vest ? 'ACTIVE ✓' : 'MISSING ✗'}</span>
             </button>
@@ -1545,7 +2081,7 @@
     }
 
     // ====================================================================
-    // 2D HAZARD ZONE BLUEPRINT CANVAS
+    // 2D HAZARD GEOFENCE BLUEPRINT CANVAS
     // ====================================================================
     function drawZoneMap() {
       const zmCanvas = document.getElementById('zone-map-canvas');
@@ -1554,10 +2090,10 @@
       const w = zmCanvas.width;
       const h = zmCanvas.height;
 
-      zctx.fillStyle = '#0F172A';
+      zctx.fillStyle = '#080C14';
       zctx.fillRect(0, 0, w, h);
 
-      zctx.strokeStyle = '#1E293B';
+      zctx.strokeStyle = '#182238';
       zctx.lineWidth = 1;
       for (let x = 0; x < w; x += 30) {
         zctx.beginPath(); zctx.moveTo(x, 0); zctx.lineTo(x, h); zctx.stroke();
@@ -1575,20 +2111,20 @@
         zctx.lineTo(hazardZone[i].x * scaleX, hazardZone[i].y * scaleY);
       }
       zctx.closePath();
-      zctx.strokeStyle = activeViolationsCount > 0 ? '#EF4444' : '#F97316';
+      zctx.strokeStyle = activeViolationsCount > 0 ? '#EF4444' : '#F59E0B';
       zctx.lineWidth = 2;
-      zctx.fillStyle = activeViolationsCount > 0 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(249, 115, 22, 0.1)';
+      zctx.fillStyle = activeViolationsCount > 0 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.1)';
       zctx.fill();
       zctx.stroke();
 
-      zctx.fillStyle = activeViolationsCount > 0 ? '#EF4444' : '#F97316';
+      zctx.fillStyle = activeViolationsCount > 0 ? '#EF4444' : '#F59E0B';
       zctx.font = 'bold 10px monospace';
-      zctx.fillText('CRANE OPERATION RESTRICTED ZONE', hazardZone[0].x * scaleX + 10, hazardZone[0].y * scaleY - 6);
+      zctx.fillText('CRANE OPERATION RESTRICTED ENCLOSURE', hazardZone[0].x * scaleX + 8, hazardZone[0].y * scaleY - 6);
 
       sceneObjects.forEach(obj => {
         const inHazard = doesBoxIntersectZone(obj.x, obj.y, obj.w, obj.h, hazardZone);
         zctx.beginPath();
-        zctx.arc(obj.x * scaleX, obj.y * scaleY, 6, 0, Math.PI * 2);
+        zctx.arc(obj.x * scaleX, obj.y * scaleY, 5, 0, Math.PI * 2);
         zctx.fillStyle = inHazard ? '#EF4444' : '#10B981';
         zctx.fill();
         zctx.strokeStyle = '#FFFFFF';
@@ -1597,47 +2133,61 @@
 
         zctx.fillStyle = '#FFFFFF';
         zctx.font = '9px monospace';
-        zctx.fillText(obj.name, obj.x * scaleX - 15, obj.y * scaleY + 16);
+        zctx.fillText(obj.name, obj.x * scaleX - 12, obj.y * scaleY + 14);
       });
     }
 
     // ====================================================================
-    // INCIDENTS LOGS TABLE
+    // INCIDENT LOGS TABLE & AUDIT TRAIL
     // ====================================================================
+    let sortColumn = 'timestamp';
+    let sortAsc = false;
+
     function renderIncidentsTable() {
       const tbody = document.getElementById('incidents-table-body');
       if (!tbody) return;
 
-      const searchTerm = (document.getElementById('incident-search')?.value || '').toLowerCase();
-      const sevFilter = document.getElementById('severity-filter')?.value || 'ALL';
+      const searchVal = document.getElementById('incident-search')?.value.toLowerCase() || '';
+      const sevVal = document.getElementById('severity-filter')?.value || 'ALL';
 
-      const filtered = incidentsDatabase.filter(inc => {
-        const matchSearch = inc.object.toLowerCase().includes(searchTerm) || 
-                            inc.type.toLowerCase().includes(searchTerm) || 
-                            inc.details.toLowerCase().includes(searchTerm);
-        const matchSev = (sevFilter === 'ALL') || (inc.severity === sevFilter);
+      let filtered = incidentsDatabase.filter(inc => {
+        const matchSearch = inc.object.toLowerCase().includes(searchVal) || 
+                            inc.type.toLowerCase().includes(searchVal) ||
+                            inc.details.toLowerCase().includes(searchVal) ||
+                            inc.camera.toLowerCase().includes(searchVal);
+        const matchSev = sevVal === 'ALL' || inc.severity === sevVal;
         return matchSearch && matchSev;
       });
 
+      filtered.sort((a, b) => {
+        let valA = a[sortColumn] || '';
+        let valB = b[sortColumn] || '';
+        if (sortAsc) return valA > valB ? 1 : -1;
+        return valA < valB ? 1 : -1;
+      });
+
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">No incident records found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400 font-mono">No matching incident records found.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = filtered.map((inc, idx) => `
-        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-          <td class="p-3 text-slate-500 font-mono">${inc.timestamp.substring(11, 19)}</td>
-          <td class="p-3 font-semibold text-slate-900 dark:text-white">${inc.object}</td>
-          <td class="p-3 font-mono">${inc.type}</td>
-          <td class="p-3">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${inc.severity === 'CRITICAL' ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800' : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800'}">
+        <tr class="hover:bg-slate-50 dark:hover:bg-[#131B2E]/60 transition-colors">
+          <td class="p-2.5 text-slate-500 font-mono">${inc.timestamp.substring(11, 19)}</td>
+          <td class="p-2.5 font-semibold text-slate-900 dark:text-white">${inc.object}</td>
+          <td class="p-2.5 font-mono">${inc.type}</td>
+          <td class="p-2.5">
+            <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${
+              inc.severity === 'CRITICAL' ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' 
+                                          : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400'
+            }">
               ${inc.severity}
             </span>
           </td>
-          <td class="p-3 text-slate-400">${inc.camera}</td>
-          <td class="p-3 text-brand-600 dark:text-brand-400">${inc.action}</td>
-          <td class="p-3">
-            <button onclick="openJSONModal(${idx})" class="text-xs text-brand-600 dark:text-brand-400 hover:underline font-mono">
+          <td class="p-2.5 text-slate-400">${inc.camera}</td>
+          <td class="p-2.5 text-techcyan-600 dark:text-techcyan-400">${inc.action}</td>
+          <td class="p-2.5 text-right">
+            <button onclick="openJSONModal(${idx})" class="text-xs text-techcyan-600 dark:text-techcyan-400 hover:underline font-mono">
               View JSON &rarr;
             </button>
           </td>
@@ -1645,11 +2195,22 @@
       `).join('');
     }
 
+    function sortIncidents(col) {
+      if (sortColumn === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortColumn = col;
+        sortAsc = false;
+      }
+      renderIncidentsTable();
+    }
+
     function filterIncidents() {
       renderIncidentsTable();
     }
 
     function openJSONModal(idx) {
+      playTactileClick();
       const modal = document.getElementById('json-modal');
       const content = document.getElementById('json-modal-content');
       if (modal && content && incidentsDatabase[idx]) {
@@ -1659,11 +2220,13 @@
     }
 
     function closeJSONModal() {
+      playTactileClick();
       const modal = document.getElementById('json-modal');
       if (modal) modal.classList.add('hidden');
     }
 
     function exportJSONL() {
+      playTactileClick();
       if (incidentsDatabase.length === 0) {
         alert("No incident records available to export.");
         return;
@@ -1673,7 +2236,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'incident_log.jsonl';
+      a.download = `incident_log_${new Date().toISOString().substring(0,10)}.jsonl`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -1681,8 +2244,15 @@
     function updateOverviewRecent() {
       const feed = document.getElementById('overview-recent-incidents');
       if (!feed) return;
-      feed.innerHTML = incidentsDatabase.slice(0, 3).map(inc => `
-        <div class="p-2.5 rounded-lg border ${inc.severity === 'CRITICAL' ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/60 text-red-800 dark:text-red-300' : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300'}">
+      if (incidentsDatabase.length === 0) {
+        feed.innerHTML = '<div class="text-slate-400 p-2 text-center">No recent alert records.</div>';
+        return;
+      }
+      feed.innerHTML = incidentsDatabase.slice(0, 4).map(inc => `
+        <div class="p-2 rounded border ${
+          inc.severity === 'CRITICAL' ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/60 text-red-800 dark:text-red-300' 
+                                      : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300'
+        }">
           <div class="flex justify-between items-center text-[10px] mb-0.5">
             <span class="font-bold">${inc.type}</span>
             <span class="text-slate-400">${inc.displayTime}</span>
@@ -1693,14 +2263,14 @@
     }
 
     // ====================================================================
-    // CHART.JS INITIALIZATION (THEME ADAPTIVE)
+    // CHART.JS INITIALIZATION (THEME ADAPTIVE & INDUSTRIAL FORMAT)
     // ====================================================================
     let perfChart = null;
     let ppeChart = null;
 
     function initOverviewCharts() {
       const isDark = document.documentElement.classList.contains('dark');
-      const gridColor = isDark ? '#1E293B' : '#E2E8F0';
+      const gridColor = isDark ? '#161F33' : '#E2E8F0';
       const textColor = isDark ? '#94A3B8' : '#64748B';
 
       const ctxPerf = document.getElementById('chart-performance')?.getContext('2d');
@@ -1712,22 +2282,25 @@
             labels: ['15:50', '15:52', '15:54', '15:56', '15:58', '16:00', '16:02', '16:04'],
             datasets: [
               {
-                label: 'Throughput (FPS)',
+                label: 'Inference FPS',
                 data: [151.2, 153.5, 152.0, 152.9, 154.1, 152.4, 152.9, 153.0],
                 borderColor: '#0284C7',
-                backgroundColor: isDark ? 'rgba(2, 132, 199, 0.1)' : 'rgba(2, 132, 199, 0.05)',
-                borderWidth: 2,
+                backgroundColor: isDark ? 'rgba(2, 132, 199, 0.08)' : 'rgba(2, 132, 199, 0.04)',
+                borderWidth: 1.8,
+                pointRadius: 2,
+                pointHoverRadius: 4,
                 fill: true,
-                tension: 0.3,
+                tension: 0.2,
                 yAxisID: 'y'
               },
               {
                 label: 'Latency (ms)',
                 data: [6.61, 6.51, 6.58, 6.54, 6.49, 6.56, 6.54, 6.53],
-                borderColor: '#F97316',
-                borderWidth: 1.8,
-                borderDash: [4, 4],
-                tension: 0.3,
+                borderColor: '#F59E0B',
+                borderWidth: 1.5,
+                borderDash: [3, 3],
+                pointRadius: 0,
+                tension: 0.2,
                 yAxisID: 'y1'
               }
             ]
@@ -1739,9 +2312,9 @@
               legend: { labels: { color: textColor, font: { family: 'JetBrains Mono', size: 10 } } }
             },
             scales: {
-              x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'JetBrains Mono' } } },
-              y: { grid: { color: gridColor }, ticks: { color: '#0284C7', font: { family: 'JetBrains Mono' } }, min: 140, max: 160 },
-              y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#F97316', font: { family: 'JetBrains Mono' } }, min: 4, max: 10 }
+              x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'JetBrains Mono', size: 9 } } },
+              y: { grid: { color: gridColor }, ticks: { color: '#0284C7', font: { family: 'JetBrains Mono', size: 9 } }, min: 140, max: 165 },
+              y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#F59E0B', font: { family: 'JetBrains Mono', size: 9 } }, min: 4, max: 10 }
             }
           }
         });
@@ -1753,12 +2326,12 @@
         ppeChart = new Chart(ctxPPE, {
           type: 'doughnut',
           data: {
-            labels: ['Compliant', 'Violations'],
+            labels: ['Compliant', 'Non-Compliant'],
             datasets: [{
               data: [83.3, 16.7],
               backgroundColor: ['#10B981', '#F59E0B'],
-              borderColor: isDark ? '#0F172A' : '#FFFFFF',
-              borderWidth: 3
+              borderColor: isDark ? '#0A0E17' : '#FFFFFF',
+              borderWidth: 2
             }]
           },
           options: {
@@ -1767,7 +2340,7 @@
             plugins: {
               legend: { position: 'bottom', labels: { color: textColor, font: { family: 'JetBrains Mono', size: 10 } } }
             },
-            cutout: '72%'
+            cutout: '74%'
           }
         });
       }
@@ -1778,18 +2351,19 @@
     }
 
     // ====================================================================
-    // WEBCAM SENSOR INTEGRATION
+    // WEBCAM HARDWARE SENSOR INTEGRATION
     // ====================================================================
     let webcamStream = null;
     let prevCamFrame = null;
 
     async function handleCameraChange(source) {
+      playTactileClick();
       if (source === 'cam') {
         mode = 'cam';
         document.getElementById('viewport').classList.add('hidden');
         document.getElementById('webcam-video').classList.remove('hidden');
         document.getElementById('webcam-overlay').classList.remove('hidden');
-        document.getElementById('main-cam-title').innerText = "CAM-02: Device Optical Sensor (Live Camera Ingestion)";
+        document.getElementById('main-cam-title').innerText = "CAM-02: HARDWARE OPTICAL SENSOR (LIVE STREAM)";
 
         try {
           webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
@@ -1806,7 +2380,7 @@
         document.getElementById('viewport').classList.remove('hidden');
         document.getElementById('webcam-video').classList.add('hidden');
         document.getElementById('webcam-overlay').classList.add('hidden');
-        document.getElementById('main-cam-title').innerText = "CAM-01: High Crane Operations Deck";
+        document.getElementById('main-cam-title').innerText = "CAM-01: OVERHEAD CRANE CELL 04";
 
         if (webcamStream) {
           webcamStream.getTracks().forEach(t => t.stop());
@@ -1864,29 +2438,29 @@
           }
         } catch (e) {}
 
-        const strokeCol = objectDetected ? '#EF4444' : '#F97316';
+        const strokeCol = objectDetected ? '#EF4444' : '#F59E0B';
         octx.strokeStyle = strokeCol;
-        octx.lineWidth = 3;
+        octx.lineWidth = 2.5;
         octx.strokeRect(zx, zy, zw, zh);
-        octx.fillStyle = objectDetected ? 'rgba(239, 68, 68, 0.16)' : 'rgba(249, 115, 22, 0.06)';
+        octx.fillStyle = objectDetected ? 'rgba(239, 68, 68, 0.18)' : 'rgba(245, 158, 11, 0.08)';
         octx.fillRect(zx, zy, zw, zh);
 
         octx.fillStyle = strokeCol;
-        octx.font = 'bold 18px monospace';
-        octx.fillText(objectDetected ? '🚨 CRITICAL: OBJECT DETECTED IN ZONE' : '⚠ RESTRICTED ZONE (HOLD ANY OBJECT HERE)', zx + 10, zy - 12);
+        octx.font = 'bold 14px monospace';
+        octx.fillText(objectDetected ? '🚨 CRITICAL: OPTICAL TARGET DETECTED IN ZONE' : '⚠ RESTRICTED ZONE // HOLD OBJECT OR HAND HERE', zx + 10, zy - 10);
 
         if (objectDetected) {
           document.getElementById('alarm-banner')?.classList.remove('hidden');
           const bannerText = document.getElementById('alarm-banner-text');
-          if (bannerText) bannerText.innerText = "CRITICAL: OBJECT / PERSON DETECTED IN RESTRICTED ZONE";
+          if (bannerText) bannerText.innerText = "CRITICAL: OPTICAL TARGET DETECTED IN RESTRICTED ZONE";
           const now = Date.now();
           if (now - lastAlertTime > 2500) {
             lastAlertTime = now;
             totalIncidentsCount++;
             const kpiTot = document.getElementById('ov-kpi-total');
             if (kpiTot) kpiTot.innerText = totalIncidentsCount;
-            playBeep(750, 'sawtooth', 0.2);
-            logTelemetry("OBJECT_INTRUSION", "Optical Sensor Object", "CRITICAL", "Live object detected inside camera restricted area");
+            playZoneAlarmChime();
+            logTelemetry("OPTICAL_INTRUSION", "Optical Sensor Object", "CRITICAL", "Live target detected inside camera restricted area");
           }
         } else {
           document.getElementById('alarm-banner')?.classList.add('hidden');
@@ -1898,10 +2472,11 @@
     }
 
     // ====================================================================
-    // INITIAL BOOT
+    // INITIAL SYSTEM BOOT
     // ====================================================================
     initTheme();
     renderObjectSelectors();
+    updateInspectorCard(selectedObject);
     initOverviewCharts();
     drawScene();
     updateOverviewRecent();
