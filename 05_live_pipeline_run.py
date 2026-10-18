@@ -4,7 +4,7 @@ import time
 import json
 import argparse
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timezone
 from ultralytics import YOLO
 
 try:
@@ -14,11 +14,12 @@ except ImportError:
     MQTT_AVAILABLE = False
 
 class UniversalRestrictedZoneSentinel:
-    def __init__(self, video_source="data/workplace_sample.mp4", output_video="output_safety_sentinel.mp4", log_file="incident_log.jsonl", use_mqtt=True):
+    def __init__(self, video_source="data/workplace_sample.mp4", output_video="output_safety_sentinel.mp4", log_file="incident_log.jsonl", use_mqtt=True, reset_log=False):
         self.video_source = video_source
         self.output_video = output_video
         self.log_file = log_file
         self.use_mqtt = use_mqtt
+        self.alert_cooldowns = {}
 
         print("[STAGE 5] Initializing CraftifAI PipeGen Universal Object Perception Engine...")
         
@@ -41,10 +42,13 @@ class UniversalRestrictedZoneSentinel:
                 print(f"[NOTICE] Running local telemetry logger (broker unreachable): {e}")
                 self.mqtt_client = None
 
-        # Reset incident log
-        with open(self.log_file, "w") as f:
-            pass
-        print(f"[SUCCESS] Incident Audit Trail initialized: {self.log_file}")
+        # Reset incident log if requested or create if doesn't exist
+        if reset_log or not os.path.exists(self.log_file):
+            with open(self.log_file, "w") as f:
+                pass
+            print(f"[SUCCESS] Incident Audit Trail initialized: {self.log_file}")
+        else:
+            print(f"[SUCCESS] Incident Audit Trail connected (append mode): {self.log_file}")
 
     def is_inside_zone(self, point, polygon):
         """Returns True if point (x, y) is inside the polygon."""
@@ -63,9 +67,15 @@ class UniversalRestrictedZoneSentinel:
                 return True
         return False
 
-    def dispatch_alert(self, event_type, object_type, object_id, bbox, violation_details):
-        """Publish real-time telemetry over MQTT and write to JSON incident log."""
-        timestamp = datetime.utcnow().isoformat() + "Z"
+    def dispatch_alert(self, event_type, object_type, object_id, bbox, violation_details, debounce_seconds=2.5):
+        """Publish real-time telemetry over MQTT and write to JSON incident log with cooldown debouncing."""
+        now_ts = time.time()
+        cooldown_key = f"{object_type}_{object_id}_{event_type}"
+        if now_ts - self.alert_cooldowns.get(cooldown_key, 0) < debounce_seconds:
+            return False
+
+        self.alert_cooldowns[cooldown_key] = now_ts
+        timestamp = datetime.now(timezone.utc).isoformat()
         incident_record = {
             "timestamp": timestamp,
             "pipeline": "CraftifAI_PipeGen_Universal_Sentinel_v0.5.1",
@@ -85,6 +95,7 @@ class UniversalRestrictedZoneSentinel:
         if self.mqtt_client:
             payload = json.dumps(incident_record)
             self.mqtt_client.publish("craftifai/pipegen/workplace_safety/alerts", payload)
+        return True
 
     def detect_all_objects(self, frame):
         """Detect any object (persons, vehicles, tools, cargo) using YOLOv8 + fallback blob contour detection."""
@@ -223,7 +234,8 @@ if __name__ == "__main__":
     parser.add_argument("--source", default="data/workplace_sample.mp4", help="Video file or camera index")
     parser.add_argument("--out", default="output_safety_sentinel.mp4", help="Output annotated video path")
     parser.add_argument("--show", action="store_true", help="Display visual window during processing")
+    parser.add_argument("--reset-log", action="store_true", help="Reset incident log before running")
     args = parser.parse_args()
 
-    sentinel = UniversalRestrictedZoneSentinel(video_source=args.source, output_video=args.out)
+    sentinel = UniversalRestrictedZoneSentinel(video_source=args.source, output_video=args.out, reset_log=args.reset_log)
     sentinel.run(show_window=args.show)

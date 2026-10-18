@@ -229,13 +229,19 @@
           <button onclick="navigateTab('monitoring')" id="nav-monitoring" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
             <i data-lucide="scan" class="w-4 h-4"></i>
             <span>Live Perception</span>
-            <span class="ml-auto w-1.5 h-1.5 rounded-full bg-signals-safe"></span>
+            <div class="ml-auto flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-signals-safe"></span>
+              <span class="text-[10px] font-mono text-slate-400">[2]</span>
+            </div>
           </button>
 
           <button onclick="navigateTab('tracking')" id="nav-tracking" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
             <i data-lucide="crosshair" class="w-4 h-4"></i>
             <span>Spatial Tracking</span>
-            <span class="ml-auto text-[10px] font-mono px-1 rounded bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400" id="sb-entity-count">5 Entities</span>
+            <div class="ml-auto flex items-center gap-1.5">
+              <span class="text-[10px] font-mono px-1 rounded bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400" id="sb-entity-count">5 Entities</span>
+              <span class="text-[10px] font-mono text-slate-400">[3]</span>
+            </div>
           </button>
         </div>
 
@@ -246,19 +252,28 @@
           <button onclick="navigateTab('ppe')" id="nav-ppe" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
             <i data-lucide="hard-hat" class="w-4 h-4"></i>
             <span>PPE Verification</span>
-            <span class="ml-auto text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold" id="sb-ppe-compliance">83.3%</span>
+            <div class="ml-auto flex items-center gap-1.5">
+              <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold" id="sb-ppe-compliance">83.3%</span>
+              <span class="text-[10px] font-mono text-slate-400">[4]</span>
+            </div>
           </button>
 
           <button onclick="navigateTab('zones')" id="nav-zones" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
             <i data-lucide="octagon" class="w-4 h-4"></i>
             <span>Geofence Zones</span>
-            <span class="ml-auto text-[10px] font-mono px-1 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800" id="sb-zone-status">1 Active</span>
+            <div class="ml-auto flex items-center gap-1.5">
+              <span class="text-[10px] font-mono px-1 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800" id="sb-zone-status">1 Active</span>
+              <span class="text-[10px] font-mono text-slate-400">[5]</span>
+            </div>
           </button>
 
           <button onclick="navigateTab('incidents')" id="nav-incidents" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
             <i data-lucide="clipboard-list" class="w-4 h-4"></i>
             <span>Audit Ledger</span>
-            <span class="ml-auto text-[10px] font-mono px-1 rounded bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400" id="sidebar-incident-badge">0 Events</span>
+            <div class="ml-auto flex items-center gap-1.5">
+              <span class="text-[10px] font-mono px-1 rounded bg-slate-100 dark:bg-[#131B2E] text-slate-600 dark:text-slate-400" id="sidebar-incident-badge">0 Events</span>
+              <span class="text-[10px] font-mono text-slate-400">[6]</span>
+            </div>
           </button>
         </div>
 
@@ -269,7 +284,10 @@
           <button onclick="navigateTab('pipeline')" id="nav-pipeline" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0E1422] border border-transparent">
             <i data-lucide="cpu" class="w-4 h-4"></i>
             <span>Pipeline Engine</span>
-            <span class="ml-auto text-[10px] font-mono text-techcyan-600 dark:text-techcyan-400">TRT-FP16</span>
+            <div class="ml-auto flex items-center gap-1.5">
+              <span class="text-[10px] font-mono text-techcyan-600 dark:text-techcyan-400">TRT-FP16</span>
+              <span class="text-[10px] font-mono text-slate-400">[7]</span>
+            </div>
           </button>
         </div>
 
@@ -850,7 +868,7 @@
             </div>
             <pre id="json-modal-content" class="bg-slate-50 dark:bg-[#070A10] p-3 rounded border border-slate-200 dark:border-[#182238] text-emerald-600 dark:text-emerald-400 overflow-x-auto text-[11px] max-h-80"></pre>
             <div class="flex justify-end gap-2">
-              <button onclick="navigator.clipboard.writeText(document.getElementById('json-modal-content').innerText); alert('JSON copied to clipboard');" class="px-3 py-1 bg-slate-100 dark:bg-[#131B2E] hover:bg-slate-200 text-slate-800 dark:text-white rounded">Copy Payload</button>
+              <button id="btn-copy-json" onclick="copyJSONPayload()" class="px-3 py-1 bg-slate-100 dark:bg-[#131B2E] hover:bg-slate-200 text-slate-800 dark:text-white rounded">Copy Payload</button>
               <button onclick="closeJSONModal()" class="px-3 py-1 bg-techcyan-600 hover:bg-techcyan-700 text-white rounded">Close</button>
             </div>
           </div>
@@ -988,7 +1006,7 @@
       <div class="grid grid-cols-2 gap-2 text-[11px]">
         <div class="p-2 rounded bg-slate-50 dark:bg-[#070A10] border border-slate-200 dark:border-[#182238] flex justify-between">
           <span>Navigate Views</span>
-          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-[10px] font-bold">1 - 6</kbd>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-[10px] font-bold">1 - 7</kbd>
         </div>
         <div class="p-2 rounded bg-slate-50 dark:bg-[#070A10] border border-slate-200 dark:border-[#182238] flex justify-between">
           <span>Steer Entity</span>
@@ -1035,6 +1053,9 @@
     function initAudioContext() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
       }
     }
 
@@ -1161,7 +1182,10 @@
       if (window.innerWidth < 1024) sidebar.classList.add('-translate-x-full');
 
       if (tabId === 'overview') {
-        initOverviewCharts();
+        if (!perfChart || chartsNeedThemeUpdate) {
+          initOverviewCharts();
+          chartsNeedThemeUpdate = false;
+        }
       } else if (tabId === 'monitoring') {
         drawScene();
       } else if (tabId === 'tracking') {
@@ -2162,8 +2186,9 @@
       filtered.sort((a, b) => {
         let valA = a[sortColumn] || '';
         let valB = b[sortColumn] || '';
-        if (sortAsc) return valA > valB ? 1 : -1;
-        return valA < valB ? 1 : -1;
+        if (valA < valB) return sortAsc ? -1 : 1;
+        if (valA > valB) return sortAsc ? 1 : -1;
+        return 0;
       });
 
       if (filtered.length === 0) {
@@ -2223,6 +2248,26 @@
       playTactileClick();
       const modal = document.getElementById('json-modal');
       if (modal) modal.classList.add('hidden');
+    }
+
+    function copyJSONPayload() {
+      playTactileClick();
+      const code = document.getElementById('json-modal-content')?.innerText || '';
+      if (!code) return;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btn-copy-json');
+        if (btn) {
+          const orig = btn.innerText;
+          btn.innerText = 'Copied ✓';
+          btn.className = 'px-3 py-1 bg-emerald-600 text-white rounded font-bold transition-all';
+          setTimeout(() => {
+            btn.innerText = orig;
+            btn.className = 'px-3 py-1 bg-slate-100 dark:bg-[#131B2E] hover:bg-slate-200 text-slate-800 dark:text-white rounded transition-all';
+          }, 1500);
+        }
+      }).catch(() => {
+        alert('Payload ready in JSON modal');
+      });
     }
 
     function exportJSONL() {
@@ -2346,8 +2391,14 @@
       }
     }
 
+    let chartsNeedThemeUpdate = false;
     function updateChartsTheme(isDark) {
-      if (perfChart) initOverviewCharts();
+      if (currentTab === 'overview') {
+        initOverviewCharts();
+        chartsNeedThemeUpdate = false;
+      } else {
+        chartsNeedThemeUpdate = true;
+      }
     }
 
     // ====================================================================
@@ -2480,6 +2531,12 @@
     initOverviewCharts();
     drawScene();
     updateOverviewRecent();
+
+    window.addEventListener('beforeunload', () => {
+      if (webcamStream) {
+        webcamStream.getTracks().forEach(t => t.stop());
+      }
+    });
   </script>
 </body>
 </html>

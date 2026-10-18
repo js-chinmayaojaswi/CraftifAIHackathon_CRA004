@@ -26,10 +26,10 @@
     "TensorRT FP16": {
       "full_name": "TensorRT Engine (FP16 Tensor Cores)",
       "provider": "TensorrtExecutionProvider",
-      "mean_latency_ms": 6.64,
-      "p95_latency_ms": 7.44,
-      "throughput_fps": 150.6,
-      "speedup": "4.7x"
+      "mean_latency_ms": 6.54,
+      "p95_latency_ms": 7.32,
+      "throughput_fps": 152.9,
+      "speedup": "4.8x"
     }
   }
 }

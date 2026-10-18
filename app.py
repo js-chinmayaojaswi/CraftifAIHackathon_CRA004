@@ -21,6 +21,7 @@ class PipelineState:
         self.active_violations = 0
         self.total_incidents = 0
         self.recent_incidents = []
+        self.alert_cooldowns = {}
         self.cap = None
         self.init_capture()
 
@@ -29,6 +30,10 @@ class PipelineState:
             self.cap.release()
         if self.source_type == "webcam":
             self.cap = cv2.VideoCapture(0)
+            if not self.cap.isOpened():
+                print("[NOTICE] Webcam device 0 unavailable, falling back to workplace video stream.")
+                self.source_type = "video"
+                self.cap = cv2.VideoCapture(self.video_path)
         else:
             self.cap = cv2.VideoCapture(self.video_path)
 
@@ -94,36 +99,43 @@ def generate_frames():
             if foot_pt[0] > 850:
                 missing_ppe.append("MISSING_SAFETY_VEST")
 
+            now_ts = time.time()
             if in_hazard:
                 violations_count += 1
-                state.total_incidents += 1
                 status_text = "CRITICAL: ZONE INTRUSION"
                 box_color = (0, 0, 255)
-                event_data = {
-                    "time": datetime.now().strftime("%H:%M:%S"),
-                    "type": "ZONE_INTRUSION",
-                    "worker": f"Worker #{idx+1}",
-                    "severity": "CRITICAL",
-                    "details": "Breached heavy machinery restricted zone"
-                }
-                state.recent_incidents.insert(0, event_data)
-                if len(state.recent_incidents) > 20:
-                    state.recent_incidents.pop()
+                key = f"hazard_{idx+1}"
+                if now_ts - state.alert_cooldowns.get(key, 0) > 3.0:
+                    state.alert_cooldowns[key] = now_ts
+                    state.total_incidents += 1
+                    event_data = {
+                        "time": datetime.now().strftime("%H:%M:%S"),
+                        "type": "ZONE_INTRUSION",
+                        "worker": f"Worker #{idx+1}",
+                        "severity": "CRITICAL",
+                        "details": "Breached heavy machinery restricted zone"
+                    }
+                    state.recent_incidents.insert(0, event_data)
+                    if len(state.recent_incidents) > 20:
+                        state.recent_incidents.pop()
             elif len(missing_ppe) > 0:
                 violations_count += 1
-                state.total_incidents += 1
                 status_text = f"WARNING: {missing_ppe[0]}"
                 box_color = (0, 140, 255)
-                event_data = {
-                    "time": datetime.now().strftime("%H:%M:%S"),
-                    "type": "PPE_VIOLATION",
-                    "worker": f"Worker #{idx+1}",
-                    "severity": "WARNING",
-                    "details": f"Missing compliance: {', '.join(missing_ppe)}"
-                }
-                state.recent_incidents.insert(0, event_data)
-                if len(state.recent_incidents) > 20:
-                    state.recent_incidents.pop()
+                key = f"ppe_{idx+1}"
+                if now_ts - state.alert_cooldowns.get(key, 0) > 3.0:
+                    state.alert_cooldowns[key] = now_ts
+                    state.total_incidents += 1
+                    event_data = {
+                        "time": datetime.now().strftime("%H:%M:%S"),
+                        "type": "PPE_VIOLATION",
+                        "worker": f"Worker #{idx+1}",
+                        "severity": "WARNING",
+                        "details": f"Missing compliance: {', '.join(missing_ppe)}"
+                    }
+                    state.recent_incidents.insert(0, event_data)
+                    if len(state.recent_incidents) > 20:
+                        state.recent_incidents.pop()
             else:
                 status_text = "SAFE: COMPLIANT WORKER"
                 box_color = (0, 255, 0)
@@ -149,7 +161,9 @@ def generate_frames():
         cv2.putText(frame, f"Active Workers: {state.active_workers} | Violations: {state.active_violations}", (20, 95), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 255) if state.active_violations > 0 else (0, 255, 0), 2)
 
-        _, buffer = cv2.imencode('.jpg', frame)
+        enc_ok, buffer = cv2.imencode('.jpg', frame)
+        if not enc_ok:
+            continue
         frame_bytes = buffer.tobytes()
 
         yield (b'--frame\r\n'
